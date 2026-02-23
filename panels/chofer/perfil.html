@@ -1,0 +1,488 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mi Perfil - Mi Chofer /title>
+    
+    <!-- Bootstrap 5 -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- SweetAlert2 -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
+    
+    <style>
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+        
+        .navbar {
+            background: rgba(255,255,255,0.1);
+            backdrop-filter: blur(10px);
+        }
+        
+        .card {
+            border: none;
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+        }
+        
+        .card-header {
+            background: white;
+            border-bottom: 2px solid #f0f0f0;
+            border-radius: 20px 20px 0 0 !important;
+            padding: 1.5rem;
+        }
+        
+        .foto-perfil {
+            width: 150px;
+            height: 150px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 5px solid white;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+        
+        .btn-camera {
+            position: absolute;
+            bottom: 10px;
+            right: 10px;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: #ff9e00;
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .btn-camera:hover {
+            transform: scale(1.1);
+            background: #ffb347;
+        }
+        
+        .badge-estadistica {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 10px 20px;
+            border-radius: 50px;
+            font-size: 1rem;
+        }
+        
+        .estadistica-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 12px;
+            border-bottom: 1px solid #f0f0f0;
+        }
+        
+        .estadistica-item:last-child {
+            border-bottom: none;
+        }
+        
+        .estadistica-label {
+            color: #6c757d;
+        }
+        
+        .estadistica-valor {
+            font-weight: bold;
+            color: #4361ee;
+        }
+        
+        .documento-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 10px;
+            margin-bottom: 10px;
+        }
+        
+        .documento-nombre i {
+            width: 25px;
+            color: #4361ee;
+        }
+        
+        .documento-estado {
+            padding: 5px 12px;
+            border-radius: 50px;
+            font-size: 0.9rem;
+            font-weight: 500;
+        }
+        
+        .estado-vigente {
+            background: #d4edda;
+            color: #155724;
+        }
+        
+        .estado-porvencer {
+            background: #fff3cd;
+            color: #856404;
+        }
+        
+        .estado-vencido {
+            background: #f8d7da;
+            color: #721c24;
+        }
+        
+        .minibus-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-radius: 15px;
+            padding: 20px;
+        }
+        
+        .minibus-icon {
+            font-size: 3rem;
+            opacity: 0.3;
+            position: absolute;
+            bottom: 10px;
+            right: 10px;
+        }
+        
+        @media (max-width: 768px) {
+            .container {
+                padding: 10px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Navbar -->
+    <nav class="navbar navbar-expand-lg navbar-dark">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="index.html">
+                <i class="fas fa-arrow-left me-2"></i>
+                Volver al panel
+            </a>
+            <span class="text-white">
+                <i class="fas fa-user-circle me-2"></i>
+                Mi Perfil
+            </span>
+        </div>
+    </nav>
+
+    <div class="container mt-4">
+        <div class="row">
+            <div class="col-md-4">
+                <!-- Tarjeta de perfil -->
+                <div class="card mb-4">
+                    <div class="card-body text-center">
+                        <div class="position-relative d-inline-block">
+                            <img src="https://ui-avatars.com/api/?name=Juan+Perez&size=150&background=4361ee&color=fff" 
+                                 class="foto-perfil" id="fotoPerfil" alt="Foto de perfil">
+                            <div class="btn-camera" onclick="cambiarFoto()">
+                                <i class="fas fa-camera"></i>
+                            </div>
+                        </div>
+                        
+                        <h4 class="mt-3" id="nombrePerfil">Juan Carlos Pérez</h4>
+                        <p class="text-muted">
+                            <i class="fas fa-bus me-1"></i>Chofer desde 2020
+                        </p>
+                        
+                        <div class="d-flex justify-content-center gap-2">
+                            <span class="badge-estadistica">
+                                <i class="fas fa-star"></i> 4.8
+                            </span>
+                            <span class="badge-estadistica">
+                                <i class="fas fa-road"></i> 15,234 km
+                            </span>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Estadísticas rápidas -->
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h6 class="mb-0">
+                            <i class="fas fa-chart-line me-2 text-primary"></i>
+                            Estadísticas
+                        </h6>
+                    </div>
+                    <div class="card-body">
+                        <div class="estadistica-item">
+                            <span class="estadistica-label">Viajes totales:</span>
+                            <span class="estadistica-valor">342</span>
+                        </div>
+                        <div class="estadistica-item">
+                            <span class="estadistica-label">Pasajeros:</span>
+                            <span class="estadistica-valor">8,547</span>
+                        </div>
+                        <div class="estadistica-item">
+                            <span class="estadistica-label">KM recorridos:</span>
+                            <span class="estadistica-valor">15,234 km</span>
+                        </div>
+                        <div class="estadistica-item">
+                            <span class="estadistica-label">Días trabajados:</span>
+                            <span class="estadistica-valor">128</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-md-8">
+                <!-- Datos personales -->
+                <div class="card mb-4">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <h6 class="mb-0">
+                            <i class="fas fa-id-card me-2 text-primary"></i>
+                            Datos personales
+                        </h6>
+                        <button class="btn btn-sm btn-outline-primary" onclick="editarPerfil()">
+                            <i class="fas fa-edit me-1"></i>Editar
+                        </button>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="text-muted small">Nombre completo</label>
+                                <p class="fw-bold" id="nombreCompleto">Juan Carlos Pérez Mamani</p>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="text-muted small">Cédula de identidad</label>
+                                <p class="fw-bold">1234567 LP</p>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="text-muted small">Teléfono</label>
+                                <p class="fw-bold" id="telefono">71234567</p>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="text-muted small">Email</label>
+                                <p class="fw-bold" id="email">juan.perez@email.com</p>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="text-muted small">Fecha de nacimiento</label>
+                                <p class="fw-bold">15/05/1985</p>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="text-muted small">Dirección</label>
+                                <p class="fw-bold" id="direccion">Av. Arce #123, /p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Licencias y documentos -->
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h6 class="mb-0">
+                            <i class="fas fa-file-alt me-2 text-primary"></i>
+                            Licencias y documentos
+                        </h6>
+                    </div>
+                    <div class="card-body">
+                        <div class="documento-item">
+                            <div class="documento-nombre">
+                                <i class="fas fa-id-card me-2"></i>
+                                Licencia de conducir
+                            </div>
+                            <div>
+                                <span class="documento-estado estado-vigente">Vigente</span>
+                                <small class="text-muted ms-2">Vence: 12/2025</small>
+                            </div>
+                        </div>
+                        
+                        <div class="documento-item">
+                            <div class="documento-nombre">
+                                <i class="fas fa-car me-2"></i>
+                                SOAT
+                            </div>
+                            <div>
+                                <span class="documento-estado estado-vigente">Vigente</span>
+                                <small class="text-muted ms-2">Vence: 03/2024</small>
+                            </div>
+                        </div>
+                        
+                        <div class="documento-item">
+                            <div class="documento-nombre">
+                                <i class="fas fa-shield-alt me-2"></i>
+                                Seguro de salud
+                            </div>
+                            <div>
+                                <span class="documento-estado estado-porvencer">Por vencer</span>
+                                <small class="text-muted ms-2">Vence: 30/04/2024</small>
+                            </div>
+                        </div>
+                        
+                        <div class="documento-item">
+                            <div class="documento-nombre">
+                                <i class="fas fa-clipboard-check me-2"></i>
+                                Revisión técnica
+                            </div>
+                            <div>
+                                <span class="documento-estado estado-vigente">Vigente</span>
+                                <small class="text-muted ms-2">Vence: 08/2024</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Minibus asignado -->
+                <div class="card">
+                    <div class="card-header">
+                        <h6 class="mb-0">
+                            <i class="fas fa-bus me-2 text-primary"></i>
+                            Minibus asignado
+                        </h6>
+                    </div>
+                    <div class="card-body">
+                        <div class="minibus-card position-relative">
+                            <div class="row">
+                                <div class="col-8">
+                                    <h4 class="mb-3">CH-2880</h4>
+                                    <p class="mb-1"><i class="fas fa-hashtag me-2"></i>Placa: 1234-ABC</p>
+                                    <p class="mb-1"><i class="fas fa-tag me-2"></i>Toyota Hiace 2019</p>
+                                    <p class="mb-0"><i class="fas fa-users me-2"></i>Capacidad: 14 pasajeros</p>
+                                </div>
+                                <div class="col-4 text-end">
+                                    <i class="fas fa-bus minibus-icon"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    
+    <script>
+        // Cargar datos al iniciar
+        document.addEventListener('DOMContentLoaded', function() {
+            const userData = localStorage.getItem('userData');
+            if(userData) {
+                const user = JSON.parse(userData);
+                document.getElementById('nombrePerfil').textContent = user.nombre || 'Juan Carlos Pérez';
+                document.getElementById('nombreCompleto').textContent = user.nombre || 'Juan Carlos Pérez Mamani';
+                document.getElementById('telefono').textContent = user.telefono || '71234567';
+                document.getElementById('email').textContent = user.email || 'juan.perez@email.com';
+            }
+        });
+
+        function editarPerfil() {
+            Swal.fire({
+                title: 'Editar perfil',
+                html: `
+                    <div class="text-start">
+                        <div class="mb-3">
+                            <label class="form-label">Nombre completo</label>
+                            <input type="text" class="form-control" id="editNombre" 
+                                   value="${document.getElementById('nombreCompleto').textContent}">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Teléfono</label>
+                            <input type="tel" class="form-control" id="editTelefono" 
+                                   value="${document.getElementById('telefono').textContent}">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Email</label>
+                            <input type="email" class="form-control" id="editEmail" 
+                                   value="${document.getElementById('email').textContent}">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Dirección</label>
+                            <input type="text" class="form-control" id="editDireccion" 
+                                   value="${document.getElementById('direccion').textContent}">
+                        </div>
+                    </div>
+                `,
+                showCancelButton: true,
+                confirmButtonText: 'Guardar cambios',
+                cancelButtonText: 'Cancelar',
+                confirmButtonColor: '#28a745',
+                preConfirm: () => {
+                    const nombre = document.getElementById('editNombre').value;
+                    const telefono = document.getElementById('editTelefono').value;
+                    const email = document.getElementById('editEmail').value;
+                    const direccion = document.getElementById('editDireccion').value;
+                    
+                    // Actualizar UI
+                    document.getElementById('nombreCompleto').textContent = nombre;
+                    document.getElementById('nombrePerfil').textContent = nombre.split(' ')[0] + ' ' + (nombre.split(' ')[1] || '');
+                    document.getElementById('telefono').textContent = telefono;
+                    document.getElementById('email').textContent = email;
+                    document.getElementById('direccion').textContent = direccion;
+                    
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Perfil actualizado',
+                        text: 'Los cambios han sido guardados',
+                        timer: 1500,
+                        showConfirmButton: false
+                    });
+                }
+            });
+        }
+
+        function cambiarFoto() {
+            Swal.fire({
+                title: 'Cambiar foto de perfil',
+                text: '¿Quieres tomar una foto o seleccionar de la galería?',
+                icon: 'question',
+                showCancelButton: true,
+                confirmButtonText: '📸 Tomar foto',
+                cancelButtonText: '🖼️ Galería',
+                confirmButtonColor: '#4361ee',
+                cancelButtonColor: '#6c757d'
+            }).then((result) => {
+                if(result.isConfirmed) {
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Foto actualizada',
+                        text: 'Demo: Foto cambiada exitosamente',
+                        timer: 1500,
+                        showConfirmButton: false
+                    });
+                } else if(result.dismiss === Swal.DismissReason.cancel) {
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Foto actualizada',
+                        text: 'Demo: Foto cambiada exitosamente',
+                        timer: 1500,
+                        showConfirmButton: false
+                    });
+                }
+            });
+        }
+
+        function cambiarPassword() {
+            Swal.fire({
+                title: 'Cambiar contraseña',
+                html: `
+                    <div class="text-start">
+                        <div class="mb-3">
+                            <label class="form-label">Contraseña actual</label>
+                            <input type="password" class="form-control" id="passActual">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Nueva contraseña</label>
+                            <input type="password" class="form-control" id="passNueva">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Confirmar contraseña</label>
+                            <input type="password" class="form-control" id="passConfirmar">
+                        </div>
+                    </div>
+                `,
+                showCancelButton: true,
+                confirmButtonText: 'Cambiar',
+                cancelButtonText: 'Cancelar',
+                confirmButtonColor: '#28a745'
+            });
+        }
+
+        window.editarPerfil = editarPerfil;
+        window.cambiarFoto = cambiarFoto;
+        window.cambiarPassword = cambiarPassword;
+    </script>
+</body>
+</html>

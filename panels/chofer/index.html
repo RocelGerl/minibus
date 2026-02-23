@@ -1,0 +1,1634 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes">
+    <title>Panel Chofer - Mi Chofer</title>
+    
+    <!-- Bootstrap 5 -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Leaflet para mapas -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <!-- Animate.css -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css"/>
+    <!-- SweetAlert2 CSS -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
+    
+    <style>
+        /* ===== VARIABLES ===== */
+        :root {
+            --color-primary: #4361ee;
+            --color-success: #4cc9f0;
+            --color-warning: #f72585;
+            --color-danger: #e63946;
+            --color-llajta: #ff9e00;
+        }
+
+        /* ===== PRELOADER (igual al index principal) ===== */
+        #preloader {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            z-index: 9999;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            transition: opacity 0.5s ease, visibility 0.5s ease;
+        }
+
+        #preloader.hidden {
+            opacity: 0;
+            visibility: hidden;
+        }
+
+        .loader {
+            text-align: center;
+            color: white;
+        }
+
+        .loader i {
+            font-size: 4rem;
+            margin-bottom: 1rem;
+            animation: bounce 2s infinite;
+        }
+
+        .spinner {
+            width: 50px;
+            height: 50px;
+            border: 5px solid rgba(255,255,255,0.3);
+            border-top: 5px solid #ff9e00;
+            border-radius: 50%;
+            margin: 20px auto;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        @keyframes bounce {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-20px); }
+        }
+
+        /* ===== NAVBAR ===== */
+        .navbar {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+
+        .conexion-indicator {
+            display: flex;
+            align-items: center;
+            background: rgba(255,255,255,0.2);
+            padding: 5px 12px;
+            border-radius: 50px;
+            color: white;
+            font-size: 0.9rem;
+        }
+
+        .punto {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            display: inline-block;
+            margin-right: 6px;
+        }
+
+        .punto.verde {
+            background: #4cc9f0;
+            box-shadow: 0 0 10px #4cc9f0;
+            animation: pulseVerde 2s infinite;
+        }
+
+        .punto.rojo {
+            background: #e63946;
+            box-shadow: 0 0 10px #e63946;
+            animation: pulseRojo 1s infinite;
+        }
+
+        @keyframes pulseVerde {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        @keyframes pulseRojo {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.3; }
+        }
+
+        .reloj-digital {
+            background: rgba(0,0,0,0.3);
+            padding: 5px 12px;
+            border-radius: 50px;
+            color: white;
+            font-family: 'Courier New', monospace;
+            font-size: 1.1rem;
+            font-weight: bold;
+            letter-spacing: 2px;
+        }
+
+        /* ===== TARJETA INICIO JORNADA ===== */
+        .card-inicio {
+            background: white;
+            border-radius: 30px;
+            padding: 40px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        /* ===== TARJETAS CONTADOR ===== */
+        .card-contador {
+            border: none;
+            border-radius: 30px;
+            color: white;
+            box-shadow: 0 20px 30px rgba(0,0,0,0.2);
+            overflow: hidden;
+        }
+
+        .card-contador.pasajeros {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+
+        .card-contador.efectivo {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+        }
+
+        .card-contador .icono {
+            width: 70px;
+            height: 70px;
+            background: rgba(255,255,255,0.2);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 15px;
+            font-size: 2rem;
+        }
+
+        .card-contador .titulo {
+            font-size: 1.2rem;
+            letter-spacing: 2px;
+            opacity: 0.9;
+            margin-bottom: 10px;
+        }
+
+        .card-contador .numero {
+            font-size: 5rem;
+            font-weight: 800;
+            line-height: 1;
+            margin-bottom: 5px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .card-contador .subtitulo {
+            opacity: 0.8;
+            font-size: 0.9rem;
+        }
+
+        .btn-accion {
+            width: 100%;
+            padding: 15px;
+            border: none;
+            border-radius: 15px;
+            color: white;
+            font-weight: bold;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            transition: all 0.3s ease;
+        }
+
+        .btn-accion i {
+            font-size: 1.5rem;
+            margin-bottom: 5px;
+        }
+
+        .btn-accion:hover {
+            transform: translateY(-3px);
+            filter: brightness(1.1);
+        }
+
+        .btn-sube {
+            background: linear-gradient(135deg, #4cc9f0 0%, #4361ee 100%);
+        }
+
+        .btn-baja {
+            background: linear-gradient(135deg, #f72585 0%, #e63946 100%);
+        }
+
+        .btn-ingreso {
+            background: linear-gradient(135deg, #4cc9f0 0%, #2ecc71 100%);
+        }
+
+        .btn-gasto {
+            background: linear-gradient(135deg, #f39c12 0%, #e67e22 100%);
+        }
+
+        .ultimos-movimientos {
+            background: rgba(0,0,0,0.2);
+            border-radius: 10px;
+            padding: 10px;
+            max-height: 100px;
+            overflow-y: auto;
+        }
+
+        .movimiento-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 3px 0;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+            font-size: 0.8rem;
+        }
+
+        .resumen-efectivo {
+            background: rgba(0,0,0,0.2);
+            border-radius: 10px;
+            padding: 10px;
+            font-size: 0.9rem;
+        }
+
+        /* ===== TARJETA MAPA ===== */
+        .card-mapa {
+            border: none;
+            border-radius: 20px;
+            overflow: hidden;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+        }
+
+        .card-mapa .card-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+        }
+
+        #mapaChofer {
+            width: 100%;
+            height: 350px;
+        }
+
+        /* ===== TARJETA QR ===== */
+        .card-qr {
+            border: none;
+            border-radius: 20px;
+            overflow: hidden;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            height: 100%;
+        }
+
+        .card-qr .card-header {
+            background: linear-gradient(135deg, #4cc9f0 0%, #4361ee 100%);
+            color: white;
+            border: none;
+        }
+
+        .qr-container {
+            background: white;
+            padding: 20px;
+            border-radius: 15px;
+            display: inline-block;
+        }
+
+        #qrCode {
+            width: 200px;
+            height: 200px;
+            margin: 0 auto;
+        }
+
+        .ultimos-pagos {
+            background: #f8f9fa;
+            border-radius: 10px;
+            padding: 10px;
+            max-height: 150px;
+            overflow-y: auto;
+        }
+
+        .pago-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px;
+            border-bottom: 1px solid #dee2e6;
+        }
+
+        .pago-monto {
+            font-weight: bold;
+            color: #28a745;
+        }
+
+        .pago-hora {
+            font-size: 0.8rem;
+            color: #6c757d;
+        }
+
+        /* ===== TARJETAS ESTADÍSTICAS ===== */
+        .card-estadistica, .card-paradas, .card-acciones {
+            border: none;
+            border-radius: 20px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.05);
+            background: white;
+        }
+
+        .estadisticas-grid {
+            display: grid;
+            gap: 10px;
+            margin-top: 15px;
+        }
+
+        .estadistica-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px;
+            background: #f8f9fa;
+            border-radius: 8px;
+        }
+
+        .paradas-lista {
+            margin-top: 15px;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+
+        .parada-item {
+            display: flex;
+            align-items: center;
+            padding: 10px;
+            border-bottom: 1px solid #f0f0f0;
+        }
+
+        .parada-item .orden {
+            width: 25px;
+            height: 25px;
+            background: #667eea;
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.8rem;
+            margin-right: 10px;
+        }
+
+        .parada-item .nombre {
+            flex: 1;
+        }
+
+        .parada-item .distancia {
+            color: #6c757d;
+            font-size: 0.8rem;
+        }
+
+        /* ===== BOTÓN DE PÁNICO ===== */
+        .boton-panico-container {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            z-index: 1000;
+        }
+
+        .boton-panico {
+            width: 70px;
+            height: 70px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #e63946 0%, #c1121f 100%);
+            border: none;
+            color: white;
+            font-size: 2rem;
+            cursor: pointer;
+            box-shadow: 0 10px 20px rgba(230, 57, 70, 0.4);
+            animation: latido 1.5s infinite;
+            transition: all 0.3s ease;
+        }
+
+        .boton-panico:hover {
+            transform: scale(1.1);
+            box-shadow: 0 15px 30px rgba(230, 57, 70, 0.6);
+        }
+
+        @keyframes latido {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+        }
+
+        .tooltip-panico {
+            position: absolute;
+            right: 80px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: rgba(0,0,0,0.8);
+            color: white;
+            padding: 5px 10px;
+            border-radius: 5px;
+            font-size: 0.9rem;
+            white-space: nowrap;
+            opacity: 0;
+            transition: all 0.3s ease;
+            pointer-events: none;
+        }
+
+        .boton-panico-container:hover .tooltip-panico {
+            opacity: 1;
+            right: 90px;
+        }
+
+        /* ===== MODALES ===== */
+        .modal-content {
+            border-radius: 20px;
+            border: none;
+        }
+
+        .modal-header {
+            border-radius: 20px 20px 0 0;
+            color: white;
+        }
+
+        .modal-header.bg-warning {
+            background: linear-gradient(135deg, #f39c12 0%, #e67e22 100%);
+        }
+
+        .modal-header.bg-danger {
+            background: linear-gradient(135deg, #e63946 0%, #c1121f 100%);
+        }
+
+        /* ===== RESPONSIVE ===== */
+        @media (max-width: 768px) {
+            .card-contador .numero {
+                font-size: 3rem;
+            }
+            
+            .btn-accion {
+                padding: 10px;
+            }
+            
+            .reloj-digital {
+                font-size: 0.9rem;
+            }
+            
+            .conexion-indicator .texto {
+                display: none;
+            }
+            
+            .boton-panico {
+                width: 50px;
+                height: 50px;
+                font-size: 1.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Preloader -->
+    <div id="preloader">
+        <div class="loader">
+            <i class="fas fa-bus"></i>
+            <h2>Mi Chofer La Paz</h2>
+            <div class="spinner"></div>
+            <p class="mt-3">Cargando panel del chofer...</p>
+        </div>
+    </div>
+
+    <!-- Barra superior -->
+    <nav class="navbar navbar-expand-lg navbar-dark sticky-top">
+        <div class="container-fluid">
+            <div class="d-flex align-items-center">
+                <i class="fas fa-bus me-2"></i>
+                <span class="navbar-brand mb-0 h1">Mi Chofer La Paz</span>
+            </div>
+            
+            <div class="d-flex align-items-center">
+                <!-- Indicador de conexión -->
+                <div class="conexion-indicator me-3" id="conexionIndicator">
+                    <span class="punto verde" id="puntoConexion"></span>
+                    <span class="texto" id="textoConexion">Conectado</span>
+                </div>
+                
+                <!-- Reloj -->
+                <div class="reloj-digital me-3" id="reloj">
+                    00:00:00
+                </div>
+                
+                <!-- Menú usuario -->
+                <div class="dropdown">
+                    <button class="btn btn-light btn-sm dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                        <i class="fas fa-user-circle me-1"></i>
+                        <span id="nombreChofer">Juan Pérez</span>
+                    </button>
+                    <ul class="dropdown-menu dropdown-menu-end">
+                        <li><a class="dropdown-item" href="#" onclick="verPerfil()"><i class="fas fa-id-card me-2"></i>Mi Perfil</a></li>
+                        <li><a class="dropdown-item" href="#" onclick="verHistorial()"><i class="fas fa-history me-2"></i>Historial</a></li>
+                        <li><hr class="dropdown-divider"></li>
+                        <li><a class="dropdown-item text-danger" href="#" onclick="cerrarSesion()"><i class="fas fa-sign-out-alt me-2"></i>Cerrar sesión</a></li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Contenido principal -->
+    <div class="container-fluid mt-3 pb-5">
+        <!-- Botón iniciar jornada -->
+        <div id="inicioJornada" class="text-center mb-4 animate__animated animate__fadeIn">
+            <div class="card-inicio">
+                <i class="fas fa-bus fa-4x text-primary mb-3"></i>
+                <h3>¿Listo para comenzar tu jornada?</h3>
+                <p class="text-muted">Selecciona tu ruta y empieza a trabajar</p>
+                
+                <div class="row justify-content-center mt-4">
+                    <div class="col-md-8">
+                        <label class="form-label fw-bold">Selecciona tu ruta:</label>
+                        <select class="form-select form-select-lg mb-3" id="selectRuta">
+                            <option value="288">Ruta 288 - Villa Salomé → Centro</option>
+                            <option value="42">Ruta 42 - Sopocachi → Caja Ferroviaria</option>
+                            <option value="15">Ruta 15 - San Pedro → Obrajes</option>
+                            <option value="7">Ruta 7 - Miraflores → El Alto</option>
+                            <option value="21">Ruta 21 - Calacoto → Centro</option>
+                        </select>
+                        
+                        <button class="btn btn-success btn-lg px-5" onclick="iniciarJornada()">
+                            <i class="fas fa-play-circle me-2"></i>INICIAR JORNADA
+                        </button>
+                    </div>
+                </div>
+                
+                <!-- Minibus asignado -->
+                <div class="mt-4">
+                    <div class="badge bg-light text-dark p-3">
+                        <i class="fas fa-truck me-2"></i>
+                        Minibus asignado: <strong>CH-2880</strong> (Placa: 1234-ABC)
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Panel principal (oculto hasta iniciar jornada) -->
+        <div id="panelPrincipal" style="display: none;">
+            <!-- Fila 1: Contadores principales -->
+            <div class="row g-3 mb-4">
+                <div class="col-md-6">
+                    <div class="card-contador pasajeros animate__animated animate__fadeInLeft">
+                        <div class="card-body text-center">
+                            <div class="icono">
+                                <i class="fas fa-users"></i>
+                            </div>
+                            <h3 class="titulo">PASAJEROS</h3>
+                            <div class="numero" id="contadorPasajeros">0</div>
+                            <div class="subtitulo" id="indicadorCapacidad">En el minibus</div>
+                            
+                            <div class="row mt-4 g-2">
+                                <div class="col-6">
+                                    <button class="btn-accion btn-sube" onclick="subirPasajero()">
+                                        <i class="fas fa-arrow-up"></i>
+                                        <span>SUBE</span>
+                                    </button>
+                                </div>
+                                <div class="col-6">
+                                    <button class="btn-accion btn-baja" onclick="bajarPasajero()">
+                                        <i class="fas fa-arrow-down"></i>
+                                        <span>BAJA</span>
+                                    </button>
+                                </div>
+                            </div>
+                            
+                            <!-- Historial rápido de últimos movimientos -->
+                            <div class="ultimos-movimientos mt-3">
+                                <small class="text-muted">Últimos movimientos:</small>
+                                <div id="listaMovimientos">
+                                    <p class="text-white-50 small">Sin movimientos</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="col-md-6">
+                    <div class="card-contador efectivo animate__animated animate__fadeInRight">
+                        <div class="card-body text-center">
+                            <div class="icono">
+                                <i class="fas fa-money-bill-wave"></i>
+                            </div>
+                            <h3 class="titulo">EFECTIVO</h3>
+                            <div class="numero" id="efectivo">Bs 0</div>
+                            <div class="subtitulo">Recaudación actual</div>
+                            
+                            <div class="row mt-4 g-2">
+                                <div class="col-6">
+                                    <button class="btn-accion btn-ingreso" onclick="agregarEfectivo()">
+                                        <i class="fas fa-plus"></i>
+                                        <span>INGRESO</span>
+                                    </button>
+                                </div>
+                                <div class="col-6">
+                                    <button class="btn-accion btn-gasto" onclick="gastarEfectivo()">
+                                        <i class="fas fa-minus"></i>
+                                        <span>GASTO</span>
+                                    </button>
+                                </div>
+                            </div>
+                            
+                            <!-- Resumen de ingresos/gastos -->
+                            <div class="resumen-efectivo mt-3">
+                                <div class="d-flex justify-content-between">
+                                    <span>Pasajes (Bs 2 c/u):</span>
+                                    <span id="totalPasajes">Bs 0</span>
+                                </div>
+                                <div class="d-flex justify-content-between">
+                                    <span>Gastos:</span>
+                                    <span id="totalGastos">Bs 0</span>
+                                </div>
+                                <hr class="my-1">
+                                <div class="d-flex justify-content-between fw-bold">
+                                    <span>Neto:</span>
+                                    <span id="netoEfectivo">Bs 0</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Fila 2: Mapa y QR -->
+            <div class="row g-3 mb-4">
+                <div class="col-lg-8">
+                    <div class="card-mapa animate__animated animate__fadeInUp">
+                        <div class="card-header d-flex justify-content-between align-items-center">
+                            <div>
+                                <i class="fas fa-map-marked-alt me-2"></i>
+                                Mi ubicación en tiempo real
+                            </div>
+                            <div class="d-flex gap-2">
+                                <span class="badge bg-light text-dark" id="velocidad">
+                                    <i class="fas fa-tachometer-alt me-1"></i>0 km/h
+                                </span>
+                                <span class="badge bg-light text-dark" id="distanciaRecorrida">
+                                    <i class="fas fa-road me-1"></i>0 km
+                                </span>
+                            </div>
+                        </div>
+                        <div class="card-body p-0">
+                            <div id="mapaChofer" style="height: 350px;"></div>
+                        </div>
+                        <div class="card-footer bg-light">
+                            <div class="d-flex justify-content-between small">
+                                <span><i class="fas fa-route text-primary"></i> Ruta activa: <span id="rutaActiva">288 - Villa Salomé → Centro</span></span>
+                                <span><i class="fas fa-clock"></i> Tiempo: <span id="tiempoViaje">00:00:00</span></span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="col-lg-4">
+                    <div class="card-qr animate__animated animate__fadeInUp">
+                        <div class="card-header">
+                            <i class="fas fa-qrcode me-2"></i>
+                            QR de Pago Dinámico
+                        </div>
+                        <div class="card-body text-center">
+                            <div class="qr-container mb-3">
+                                <div id="qrCode"></div>
+                            </div>
+                            
+                            <p class="mb-1">Pasajeros: escaneen para pagar</p>
+                            <div class="badge bg-warning text-dark mb-2">
+                                <i class="fas fa-clock me-1"></i>
+                                Válido por: <span id="qrTimer">5:00</span>
+                            </div>
+                            
+                            <!-- Últimos pagos QR -->
+                            <div class="ultimos-pagos mt-3">
+                                <h6 class="text-start"><i class="fas fa-history me-2"></i>Últimos pagos QR</h6>
+                                <div id="listaPagosQR">
+                                    <p class="text-muted small">Esperando pagos...</p>
+                                </div>
+                            </div>
+                            
+                            <button class="btn btn-outline-success btn-sm mt-2" onclick="regenerarQR()">
+                                <i class="fas fa-sync-alt me-1"></i>Regenerar QR
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Fila 3: Estadísticas y controles -->
+            <div class="row g-3 mb-4">
+                <div class="col-md-4">
+                    <div class="card-estadistica">
+                        <div class="card-body">
+                            <h6><i class="fas fa-chart-pie me-2 text-primary"></i>Estadísticas del día</h6>
+                            <div class="estadisticas-grid">
+                                <div class="estadistica-item">
+                                    <span class="label">Vueltas realizadas:</span>
+                                    <span class="valor" id="vueltasRealizadas">0</span>
+                                </div>
+                                <div class="estadistica-item">
+                                    <span class="label">Total pasajeros:</span>
+                                    <span class="valor" id="totalPasajerosDia">0</span>
+                                </div>
+                                <div class="estadistica-item">
+                                    <span class="label">Promedio por vuelta:</span>
+                                    <span class="valor" id="promedioPasajeros">0</span>
+                                </div>
+                                <div class="estadistica-item">
+                                    <span class="label">KM recorridos:</span>
+                                    <span class="valor" id="kmTotales">0 km</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="col-md-4">
+                    <div class="card-paradas">
+                        <div class="card-body">
+                            <h6><i class="fas fa-map-signs me-2 text-primary"></i>Próximas paradas</h6>
+                            <div id="listaParadas" class="paradas-lista">
+                                <!-- Se llena con JS -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="col-md-4">
+                    <div class="card-acciones">
+                        <div class="card-body">
+                            <h6><i class="fas fa-tools me-2 text-primary"></i>Acciones rápidas</h6>
+                            
+                            <button class="btn btn-outline-primary w-100 mb-2" onclick="marcarVuelta()">
+                                <i class="fas fa-flag-checkered me-2"></i>Completar vuelta
+                            </button>
+                            
+                            <button class="btn btn-outline-warning w-100 mb-2" onclick="reportarProblema()">
+                                <i class="fas fa-exclamation-triangle me-2"></i>Reportar problema
+                            </button>
+                            
+                            <button class="btn btn-outline-info w-100 mb-2" onclick="cambiarRuta()">
+                                <i class="fas fa-route me-2"></i>Cambiar de ruta
+                            </button>
+                            
+                            <button class="btn btn-outline-danger w-100" onclick="finalizarJornada()">
+                                <i class="fas fa-stop-circle me-2"></i>Finalizar jornada
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Botón de pánico flotante -->
+    <div class="boton-panico-container">
+        <button class="boton-panico" onclick="activarPanico()">
+            <i class="fas fa-exclamation-triangle"></i>
+        </button>
+        <span class="tooltip-panico">Emergencia</span>
+    </div>
+
+    <!-- Modal para gastos -->
+    <div class="modal fade" id="modalGasto" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header bg-warning">
+                    <h5 class="modal-title text-white">
+                        <i class="fas fa-receipt me-2"></i>Registrar gasto
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="formGasto">
+                        <div class="mb-3">
+                            <label class="form-label">Monto (Bs)</label>
+                            <input type="number" class="form-control" id="montoGasto" step="0.5" min="0" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Concepto</label>
+                            <select class="form-select" id="conceptoGasto" required>
+                                <option value="">Seleccionar...</option>
+                                <option value="combustible">⛽ Combustible</option>
+                                <option value="peaje">🛣️ Peaje</option>
+                                <option value="mecanico">🔧 Mecánico</option>
+                                <option value="comida">🍔 Comida</option>
+                                <option value="otro">📦 Otro</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Descripción (opcional)</label>
+                            <textarea class="form-control" id="descripcionGasto" rows="2"></textarea>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="button" class="btn btn-warning" onclick="guardarGasto()">Registrar gasto</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal para reportar problema -->
+    <div class="modal fade" id="modalProblema" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header bg-danger text-white">
+                    <h5 class="modal-title">
+                        <i class="fas fa-exclamation-circle me-2"></i>Reportar problema
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="formProblema">
+                        <div class="mb-3">
+                            <label class="form-label">Tipo de problema</label>
+                            <select class="form-select" id="tipoProblema" required>
+                                <option value="">Seleccionar...</option>
+                                <option value="mecanico">🔧 Problema mecánico</option>
+                                <option value="accidente">🚨 Accidente</option>
+                                <option value="bloqueo">🚧 Bloqueo en ruta</option>
+                                <option value="asalto">⚠️ Asalto / Inseguridad</option>
+                                <option value="otro">📌 Otro</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Descripción</label>
+                            <textarea class="form-control" id="descripcionProblema" rows="3" required></textarea>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="button" class="btn btn-danger" onclick="enviarReporteProblema()">Enviar reporte</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <script src="https://cdn.socket.io/4.5.0/socket.io.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    
+    <script>
+        // ===== VARIABLES GLOBALES =====
+        let jornadaActiva = false;
+        let totalPasajeros = 0;
+        let totalEfectivo = 0;
+        let totalGastos = 0;
+        let vueltasCompletadas = 0;
+        let kmRecorridos = 0;
+        let inicioJornadaTime = null;
+        let rutaActual = '288';
+        let movimientos = [];
+        let pagosQR = [];
+        let mapa = null;
+        let marcadorChofer = null;
+        let rastreadorGPS = null;
+        let ultimaPosicion = null;
+        let socket = null;
+        let qrCode = null;
+        let qrTimer = null;
+        let tiempoRestanteQR = 300;
+        
+        const CAPACIDAD_MAXIMA = 14;
+        const TARIFA_PASAJE = 2;
+        const SOCKET_URL = 'http://localhost:3000';
+        
+        // ===== INICIALIZACIÓN =====
+        document.addEventListener('DOMContentLoaded', function() {
+            // Ocultar preloader
+            setTimeout(function() {
+                document.getElementById('preloader').classList.add('hidden');
+            }, 1000);
+            
+            // Iniciar reloj
+            actualizarReloj();
+            setInterval(actualizarReloj, 1000);
+            
+            // Cargar datos del chofer
+            const userData = localStorage.getItem('userData');
+            if(userData) {
+                const user = JSON.parse(userData);
+                document.getElementById('nombreChofer').textContent = user.nombre || 'Juan Pérez';
+            }
+            
+            // Inicializar lista de paradas
+            actualizarParadas('288');
+        });
+
+        // ===== RELOJ =====
+        function actualizarReloj() {
+            const ahora = new Date();
+            const horas = ahora.getHours().toString().padStart(2, '0');
+            const minutos = ahora.getMinutes().toString().padStart(2, '0');
+            const segundos = ahora.getSeconds().toString().padStart(2, '0');
+            document.getElementById('reloj').textContent = `${horas}:${minutos}:${segundos}`;
+            
+            if(inicioJornadaTime) {
+                const diff = Math.floor((ahora - inicioJornadaTime) / 1000);
+                const h = Math.floor(diff / 3600).toString().padStart(2, '0');
+                const m = Math.floor((diff % 3600) / 60).toString().padStart(2, '0');
+                const s = (diff % 60).toString().padStart(2, '0');
+                document.getElementById('tiempoViaje').textContent = `${h}:${m}:${s}`;
+            }
+        }
+
+        // ===== INICIAR JORNADA =====
+        function iniciarJornada() {
+            const rutaSelect = document.getElementById('selectRuta');
+            rutaActual = rutaSelect.value;
+            const nombreRuta = rutaSelect.options[rutaSelect.selectedIndex].text;
+            
+            Swal.fire({
+                title: '¿Iniciar jornada?',
+                text: `Ruta seleccionada: ${nombreRuta}`,
+                icon: 'question',
+                showCancelButton: true,
+                confirmButtonColor: '#28a745',
+                cancelButtonColor: '#6c757d',
+                confirmButtonText: 'Sí, iniciar',
+                cancelButtonText: 'Cancelar'
+            }).then((result) => {
+                if(result.isConfirmed) {
+                    jornadaActiva = true;
+                    inicioJornadaTime = new Date();
+                    
+                    // Ocultar inicio, mostrar panel
+                    document.getElementById('inicioJornada').style.display = 'none';
+                    document.getElementById('panelPrincipal').style.display = 'block';
+                    
+                    // Mostrar ruta activa
+                    document.getElementById('rutaActiva').textContent = nombreRuta;
+                    
+                    // Inicializar sistemas
+                    iniciarMapa();
+                    iniciarGPS();
+                    conectarWebSocket();
+                    generarQR();
+                    
+                    Swal.fire({
+                        icon: 'success',
+                        title: '¡Jornada iniciada!',
+                        text: 'Buena ruta compañero',
+                        timer: 2000,
+                        showConfirmButton: false
+                    });
+                }
+            });
+        }
+
+        // ===== FINALIZAR JORNADA =====
+        function finalizarJornada() {
+            Swal.fire({
+                title: '¿Finalizar jornada?',
+                html: `
+                    <div class="text-start">
+                        <p><strong>Resumen del día:</strong></p>
+                        <p>👥 Pasajeros: ${totalPasajeros}</p>
+                        <p>💰 Efectivo: Bs ${totalEfectivo}</p>
+                        <p>📊 Gastos: Bs ${totalGastos}</p>
+                        <p>🔄 Vueltas: ${vueltasCompletadas}</p>
+                        <p>📏 KM recorridos: ${kmRecorridos.toFixed(1)} km</p>
+                    </div>
+                `,
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#28a745',
+                cancelButtonColor: '#6c757d',
+                confirmButtonText: 'Sí, finalizar',
+                cancelButtonText: 'Seguir trabajando'
+            }).then((result) => {
+                if(result.isConfirmed) {
+                    // Detener GPS
+                    if(rastreadorGPS) {
+                        navigator.geolocation.clearWatch(rastreadorGPS);
+                    }
+                    
+                    // Guardar historial
+                    guardarHistorial();
+                    
+                    Swal.fire({
+                        icon: 'success',
+                        title: '¡Jornada finalizada!',
+                        text: 'Gracias por tu trabajo',
+                        timer: 2000,
+                        showConfirmButton: false
+                    }).then(() => {
+                        window.location.reload();
+                    });
+                }
+            });
+        }
+
+        // ===== SUBIR PASAJERO =====
+        function subirPasajero() {
+            if(totalPasajeros >= CAPACIDAD_MAXIMA) {
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'Minibus lleno',
+                    text: 'No puedes subir más pasajeros',
+                    timer: 1500,
+                    showConfirmButton: false
+                });
+                
+                if(navigator.vibrate) navigator.vibrate(200);
+                return;
+            }
+            
+            totalPasajeros++;
+            totalEfectivo += TARIFA_PASAJE;
+            
+            // Registrar movimiento
+            movimientos.unshift({
+                tipo: 'sube',
+                hora: new Date().toLocaleTimeString(),
+                pasajeros: totalPasajeros
+            });
+            if(movimientos.length > 5) movimientos.pop();
+            
+            actualizarContadoresUI();
+            actualizarListaMovimientos();
+            
+            if(navigator.vibrate) navigator.vibrate(50);
+            
+            document.getElementById('totalPasajerosDia').textContent = totalPasajeros;
+        }
+
+        // ===== BAJAR PASAJERO =====
+        function bajarPasajero() {
+            if(totalPasajeros <= 0) {
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'Sin pasajeros',
+                    text: 'No hay pasajeros para bajar',
+                    timer: 1500,
+                    showConfirmButton: false
+                });
+                return;
+            }
+            
+            totalPasajeros--;
+            
+            movimientos.unshift({
+                tipo: 'baja',
+                hora: new Date().toLocaleTimeString(),
+                pasajeros: totalPasajeros
+            });
+            if(movimientos.length > 5) movimientos.pop();
+            
+            actualizarContadoresUI();
+            actualizarListaMovimientos();
+            
+            if(navigator.vibrate) navigator.vibrate(50);
+        }
+
+        // ===== ACTUALIZAR CONTADORES UI =====
+        function actualizarContadoresUI() {
+            document.getElementById('contadorPasajeros').textContent = totalPasajeros;
+            document.getElementById('efectivo').textContent = `Bs ${totalEfectivo}`;
+            document.getElementById('totalPasajes').textContent = `Bs ${totalPasajeros * TARIFA_PASAJE}`;
+            document.getElementById('totalGastos').textContent = `Bs ${totalGastos}`;
+            document.getElementById('netoEfectivo').textContent = `Bs ${totalEfectivo - totalGastos}`;
+            
+            // Cambiar color si está cerca del límite
+            const contadorElement = document.getElementById('contadorPasajeros');
+            const indicador = document.getElementById('indicadorCapacidad');
+            
+            if(totalPasajeros >= CAPACIDAD_MAXIMA) {
+                contadorElement.style.color = '#e63946';
+                indicador.textContent = '¡MINIBUS LLENO!';
+                indicador.style.color = '#e63946';
+                indicador.style.fontWeight = 'bold';
+            } else if(totalPasajeros >= CAPACIDAD_MAXIMA - 3) {
+                contadorElement.style.color = '#ff9e00';
+                indicador.textContent = 'Casi lleno';
+                indicador.style.color = '#ff9e00';
+            } else {
+                contadorElement.style.color = 'white';
+                indicador.textContent = 'En el minibus';
+                indicador.style.color = '';
+            }
+        }
+
+        function actualizarListaMovimientos() {
+            const lista = document.getElementById('listaMovimientos');
+            
+            if(movimientos.length === 0) {
+                lista.innerHTML = '<p class="text-white-50 small">Sin movimientos</p>';
+                return;
+            }
+            
+            lista.innerHTML = movimientos.map(m => `
+                <div class="movimiento-item">
+                    <span>
+                        <i class="fas fa-arrow-${m.tipo === 'sube' ? 'up' : 'down'} me-1"></i>
+                        ${m.hora}
+                    </span>
+                    <span>${m.pasajeros} pasajeros</span>
+                </div>
+            `).join('');
+        }
+
+        // ===== AGREGAR INGRESO =====
+        function agregarEfectivo() {
+            Swal.fire({
+                title: 'Registrar ingreso',
+                html: `
+                    <input type="number" id="montoIngreso" class="swal2-input" placeholder="Monto en Bs" step="0.5" min="0">
+                    <select id="conceptoIngreso" class="swal2-select" style="width: 100%; margin-top: 10px;">
+                        <option value="pasajes">Pasajes</option>
+                        <option value="vuelta_completa">Vuelta completa</option>
+                        <option value="otro">Otro ingreso</option>
+                    </select>
+                `,
+                focusConfirm: false,
+                showCancelButton: true,
+                confirmButtonText: 'Registrar',
+                cancelButtonText: 'Cancelar',
+                preConfirm: () => {
+                    const monto = parseFloat(document.getElementById('montoIngreso').value);
+                    if(!monto || monto <= 0) {
+                        Swal.showValidationMessage('Ingresa un monto válido');
+                        return false;
+                    }
+                    return { monto };
+                }
+            }).then((result) => {
+                if(result.isConfirmed) {
+                    totalEfectivo += result.value.monto;
+                    actualizarContadoresUI();
+                    
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Ingreso registrado',
+                        text: `+Bs ${result.value.monto}`,
+                        timer: 1500,
+                        showConfirmButton: false
+                    });
+                }
+            });
+        }
+
+        // ===== GASTAR EFECTIVO =====
+        function gastarEfectivo() {
+            const modal = new bootstrap.Modal(document.getElementById('modalGasto'));
+            modal.show();
+        }
+
+        function guardarGasto() {
+            const monto = parseFloat(document.getElementById('montoGasto').value);
+            const concepto = document.getElementById('conceptoGasto').value;
+            const descripcion = document.getElementById('descripcionGasto').value;
+            
+            if(!monto || monto <= 0 || !concepto) {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: 'Completa todos los campos requeridos'
+                });
+                return;
+            }
+            
+            if(monto > totalEfectivo) {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Saldo insuficiente',
+                    text: `Solo tienes Bs ${totalEfectivo} disponible`
+                });
+                return;
+            }
+            
+            totalEfectivo -= monto;
+            totalGastos += monto;
+            
+            bootstrap.Modal.getInstance(document.getElementById('modalGasto')).hide();
+            actualizarContadoresUI();
+            document.getElementById('formGasto').reset();
+            
+            Swal.fire({
+                icon: 'success',
+                title: 'Gasto registrado',
+                text: `-Bs ${monto}`,
+                timer: 1500,
+                showConfirmButton: false
+            });
+        }
+
+        // ===== MARCAR VUELTA =====
+        function marcarVuelta() {
+            vueltasCompletadas++;
+            const promedio = (totalPasajeros / vueltasCompletadas).toFixed(1);
+            
+            document.getElementById('vueltasRealizadas').textContent = vueltasCompletadas;
+            document.getElementById('promedioPasajeros').textContent = promedio;
+            
+            Swal.fire({
+                icon: 'success',
+                title: '¡Vuelta completada!',
+                text: `Vuelta #${vueltasCompletadas}`,
+                timer: 1500,
+                showConfirmButton: false
+            });
+        }
+
+        // ===== CAMBIAR RUTA =====
+        function cambiarRuta() {
+            Swal.fire({
+                title: 'Cambiar de ruta',
+                input: 'select',
+                inputOptions: {
+                    '288': 'Ruta 288 - Villa Salomé → Centro',
+                    '42': 'Ruta 42 - Sopocachi → Caja Ferroviaria',
+                    '15': 'Ruta 15 - San Pedro → Obrajes',
+                    '7': 'Ruta 7 - Miraflores → El Alto',
+                    '21': 'Ruta 21 - Calacoto → Centro'
+                },
+                inputPlaceholder: 'Selecciona nueva ruta',
+                showCancelButton: true,
+                confirmButtonText: 'Cambiar',
+                cancelButtonText: 'Cancelar',
+                inputValidator: (value) => {
+                    if(!value) return 'Debes seleccionar una ruta';
+                }
+            }).then((result) => {
+                if(result.isConfirmed) {
+                    rutaActual = result.value;
+                    const nombreRuta = result.value === '288' ? 'Villa Salomé → Centro' :
+                                      result.value === '42' ? 'Sopocachi → Caja Ferroviaria' :
+                                      result.value === '15' ? 'San Pedro → Obrajes' :
+                                      result.value === '7' ? 'Miraflores → El Alto' :
+                                      'Calacoto → Centro';
+                    
+                    document.getElementById('rutaActiva').textContent = `Ruta ${rutaActual} - ${nombreRuta}`;
+                    actualizarParadas(rutaActual);
+                    regenerarQR();
+                    
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Ruta cambiada',
+                        text: `Ahora estás en ruta ${rutaActual}`,
+                        timer: 1500,
+                        showConfirmButton: false
+                    });
+                }
+            });
+        }
+
+        // ===== ACTUALIZAR PARADAS =====
+        function actualizarParadas(rutaId) {
+            const paradas = {
+                '288': [
+                    { nombre: 'Villa Salomé', distancia: '0 km' },
+                    { nombre: 'Obrajes', distancia: '2.5 km' },
+                    { nombre: 'San Pedro', distancia: '4.2 km' },
+                    { nombre: 'Plaza San Francisco', distancia: '5.8 km' }
+                ],
+                '42': [
+                    { nombre: 'Sopocachi', distancia: '0 km' },
+                    { nombre: 'El Prado', distancia: '1.2 km' },
+                    { nombre: 'Cementerio', distancia: '2.8 km' }
+                ],
+                '15': [
+                    { nombre: 'San Pedro', distancia: '0 km' },
+                    { nombre: 'Obrajes', distancia: '2.1 km' },
+                    { nombre: 'Mallasa', distancia: '4.5 km' }
+                ],
+                '7': [
+                    { nombre: 'Miraflores', distancia: '0 km' },
+                    { nombre: 'El Alto', distancia: '8.5 km' }
+                ],
+                '21': [
+                    { nombre: 'Calacoto', distancia: '0 km' },
+                    { nombre: 'San Miguel', distancia: '1.8 km' },
+                    { nombre: 'Centro', distancia: '6.2 km' }
+                ]
+            };
+            
+            const lista = document.getElementById('listaParadas');
+            const paradasRuta = paradas[rutaId] || paradas['288'];
+            
+            lista.innerHTML = paradasRuta.map((p, index) => `
+                <div class="parada-item">
+                    <span class="orden">${index + 1}</span>
+                    <span class="nombre">${p.nombre}</span>
+                    <span class="distancia">${p.distancia}</span>
+                </div>
+            `).join('');
+        }
+
+        // ===== INICIAR MAPA =====
+        function iniciarMapa() {
+            mapa = L.map('mapaChofer').setView([-16.5, -68.15], 15);
+            
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '© Mi Chofer La Paz'
+            }).addTo(mapa);
+            
+            const iconoMinibus = L.divIcon({
+                className: 'marcador-minibus',
+                html: '<i class="fas fa-bus fa-3x" style="color: #4361ee;"></i>',
+                iconSize: [40, 40],
+                iconAnchor: [20, 20]
+            });
+            
+            marcadorChofer = L.marker([-16.5, -68.15], { icon: iconoMinibus }).addTo(mapa);
+        }
+
+        // ===== INICIAR GPS =====
+        function iniciarGPS() {
+            if(!navigator.geolocation) {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: 'Tu dispositivo no soporta GPS'
+                });
+                return;
+            }
+            
+            rastreadorGPS = navigator.geolocation.watchPosition(
+                function(position) {
+                    const lat = position.coords.latitude;
+                    const lng = position.coords.longitude;
+                    const velocidad = position.coords.speed || 0;
+                    
+                    if(marcadorChofer) {
+                        marcadorChofer.setLatLng([lat, lng]);
+                        mapa.panTo([lat, lng]);
+                    }
+                    
+                    const velocidadKmh = (velocidad * 3.6).toFixed(1);
+                    document.getElementById('velocidad').innerHTML = 
+                        `<i class="fas fa-tachometer-alt me-1"></i>${velocidadKmh} km/h`;
+                    
+                    if(ultimaPosicion) {
+                        const distancia = calcularDistancia(
+                            ultimaPosicion.lat, ultimaPosicion.lng, lat, lng
+                        );
+                        kmRecorridos += distancia;
+                        document.getElementById('distanciaRecorrida').innerHTML =
+                            `<i class="fas fa-road me-1"></i>${kmRecorridos.toFixed(2)} km`;
+                        document.getElementById('kmTotales').textContent = `${kmRecorridos.toFixed(1)} km`;
+                    }
+                    
+                    ultimaPosicion = { lat, lng };
+                },
+                function(error) {
+                    document.getElementById('puntoConexion').className = 'punto rojo';
+                    document.getElementById('textoConexion').textContent = 'Sin GPS';
+                },
+                {
+                    enableHighAccuracy: true,
+                    maximumAge: 0,
+                    timeout: 5000
+                }
+            );
+        }
+
+        function calcularDistancia(lat1, lon1, lat2, lon2) {
+            const R = 6371;
+            const dLat = (lat2 - lat1) * Math.PI / 180;
+            const dLon = (lon2 - lon1) * Math.PI / 180;
+            const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
+                     Math.cos(lat1 * Math.PI/180) * Math.cos(lat2 * Math.PI/180) *
+                     Math.sin(dLon/2) * Math.sin(dLon/2);
+            const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+            return R * c;
+        }
+
+        // ===== GENERAR QR =====
+        function generarQR() {
+            const qrContainer = document.getElementById('qrCode');
+            qrContainer.innerHTML = '';
+            
+            const qrData = {
+                minibusId: 'CH-2880',
+                ruta: rutaActual,
+                monto: TARIFA_PASAJE,
+                timestamp: new Date().getTime(),
+                token: Math.random().toString(36).substring(2, 15)
+            };
+            
+            qrCode = new QRCode(qrContainer, {
+                text: JSON.stringify(qrData),
+                width: 200,
+                height: 200
+            });
+            
+            iniciarTimerQR();
+        }
+
+        function iniciarTimerQR() {
+            if(qrTimer) clearInterval(qrTimer);
+            
+            tiempoRestanteQR = 300;
+            actualizarTimerDisplay();
+            
+            qrTimer = setInterval(() => {
+                tiempoRestanteQR--;
+                actualizarTimerDisplay();
+                
+                if(tiempoRestanteQR <= 0) {
+                    clearInterval(qrTimer);
+                    regenerarQR();
+                }
+            }, 1000);
+        }
+
+        function actualizarTimerDisplay() {
+            const minutos = Math.floor(tiempoRestanteQR / 60);
+            const segundos = tiempoRestanteQR % 60;
+            document.getElementById('qrTimer').textContent = 
+                `${minutos.toString().padStart(2, '0')}:${segundos.toString().padStart(2, '0')}`;
+        }
+
+        function regenerarQR() {
+            clearInterval(qrTimer);
+            generarQR();
+        }
+
+        // ===== CONECTAR WEBSOCKET =====
+        function conectarWebSocket() {
+            try {
+                socket = io(SOCKET_URL, {
+                    reconnection: true,
+                    timeout: 5000
+                });
+                
+                socket.on('connect', function() {
+                    document.getElementById('puntoConexion').className = 'punto verde';
+                    document.getElementById('textoConexion').textContent = 'Conectado';
+                });
+                
+                socket.on('disconnect', function() {
+                    document.getElementById('puntoConexion').className = 'punto rojo';
+                    document.getElementById('textoConexion').textContent = 'Desconectado';
+                });
+                
+                socket.on('pago-qr', function(data) {
+                    pagoQRRecibido(data.monto, data.pasajero);
+                });
+            } catch(e) {
+                console.log('Socket no disponible');
+            }
+        }
+
+        function pagoQRRecibido(monto, pasajero) {
+            totalEfectivo += monto;
+            actualizarContadoresUI();
+            
+            pagosQR.unshift({
+                monto,
+                pasajero: pasajero || 'Pasajero',
+                hora: new Date().toLocaleTimeString()
+            });
+            if(pagosQR.length > 5) pagosQR.pop();
+            
+            actualizarListaPagosQR();
+        }
+
+        function actualizarListaPagosQR() {
+            const lista = document.getElementById('listaPagosQR');
+            
+            if(pagosQR.length === 0) {
+                lista.innerHTML = '<p class="text-muted small">Esperando pagos...</p>';
+                return;
+            }
+            
+            lista.innerHTML = pagosQR.map(p => `
+                <div class="pago-item">
+                    <span>${p.pasajero}</span>
+                    <span class="pago-monto">+Bs ${p.monto}</span>
+                    <span class="pago-hora">${p.hora}</span>
+                </div>
+            `).join('');
+        }
+
+        // ===== REPORTAR PROBLEMA =====
+        function reportarProblema() {
+            const modal = new bootstrap.Modal(document.getElementById('modalProblema'));
+            modal.show();
+        }
+
+        function enviarReporteProblema() {
+            const tipo = document.getElementById('tipoProblema').value;
+            const descripcion = document.getElementById('descripcionProblema').value;
+            
+            if(!tipo || !descripcion) {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: 'Completa todos los campos'
+                });
+                return;
+            }
+            
+            bootstrap.Modal.getInstance(document.getElementById('modalProblema')).hide();
+            document.getElementById('formProblema').reset();
+            
+            Swal.fire({
+                icon: 'success',
+                title: 'Reporte enviado',
+                text: 'El sindicato recibirá tu reporte',
+                timer: 2000,
+                showConfirmButton: false
+            });
+        }
+
+        // ===== BOTÓN DE PÁNICO =====
+        function activarPanico() {
+            Swal.fire({
+                title: '¿ACTIVAR ALERTA DE EMERGENCIA?',
+                text: 'Esto notificará al sindicato',
+                icon: 'error',
+                showCancelButton: true,
+                confirmButtonColor: '#dc3545',
+                cancelButtonColor: '#6c757d',
+                confirmButtonText: 'SÍ, ACTIVAR',
+                cancelButtonText: 'Cancelar'
+            }).then((result) => {
+                if(result.isConfirmed) {
+                    if(navigator.vibrate) navigator.vibrate([500, 200, 500]);
+                    
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'ALERTA ENVIADA',
+                        text: 'Espera ayuda',
+                        confirmButtonColor: '#28a745'
+                    });
+                }
+            });
+        }
+
+        // ===== GUARDAR HISTORIAL =====
+        function guardarHistorial() {
+            const historial = JSON.parse(localStorage.getItem('historialJornadas') || '[]');
+            
+            historial.push({
+                fecha: new Date().toISOString(),
+                inicio: inicioJornadaTime,
+                fin: new Date(),
+                ruta: rutaActual,
+                pasajeros: totalPasajeros,
+                efectivo: totalEfectivo,
+                gastos: totalGastos,
+                vueltas: vueltasCompletadas,
+                km: kmRecorridos
+            });
+            
+            localStorage.setItem('historialJornadas', JSON.stringify(historial));
+        }
+
+        // ===== FUNCIONES DE NAVEGACIÓN =====
+        function verPerfil() {
+            window.location.href = 'perfil.html';
+        }
+
+        function verHistorial() {
+            window.location.href = 'historial.html';
+        }
+
+        function cerrarSesion() {
+            Swal.fire({
+                title: '¿Cerrar sesión?',
+                text: '¿Estás seguro?',
+                icon: 'question',
+                showCancelButton: true,
+                confirmButtonColor: '#dc3545',
+                cancelButtonColor: '#6c757d',
+                confirmButtonText: 'Sí, salir',
+                cancelButtonText: 'Cancelar'
+            }).then((result) => {
+                if(result.isConfirmed) {
+                    localStorage.removeItem('token');
+                    localStorage.removeItem('userData');
+                    window.location.href = '../auth/login.html';
+                }
+            });
+        }
+
+        // ===== EXPORTAR FUNCIONES AL ÁMBITO GLOBAL =====
+        window.iniciarJornada = iniciarJornada;
+        window.finalizarJornada = finalizarJornada;
+        window.subirPasajero = subirPasajero;
+        window.bajarPasajero = bajarPasajero;
+        window.agregarEfectivo = agregarEfectivo;
+        window.gastarEfectivo = gastarEfectivo;
+        window.guardarGasto = guardarGasto;
+        window.marcarVuelta = marcarVuelta;
+        window.cambiarRuta = cambiarRuta;
+        window.reportarProblema = reportarProblema;
+        window.enviarReporteProblema = enviarReporteProblema;
+        window.activarPanico = activarPanico;
+        window.regenerarQR = regenerarQR;
+        window.verPerfil = verPerfil;
+        window.verHistorial = verHistorial;
+        window.cerrarSesion = cerrarSesion;
+    </script>
+</body>
+</html>

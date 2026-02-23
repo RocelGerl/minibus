@@ -1,0 +1,1191 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes">
+    <title>Mi Chofer Pasajero - </title>
+    
+    <!-- Bootstrap 5 -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Leaflet para mapas -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <!-- SweetAlert2 -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
+    <!-- QR Code -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Segoe UI', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding-bottom: 80px;
+        }
+        
+        /* Preloader */
+        #preloader {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            z-index: 9999;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            transition: opacity 0.5s ease;
+        }
+        #preloader.hidden { opacity: 0; visibility: hidden; }
+        .loader { text-align: center; color: white; }
+        .loader i { font-size: 4rem; animation: bounce 2s infinite; }
+        .spinner {
+            width: 50px; height: 50px;
+            border: 5px solid rgba(255,255,255,0.3);
+            border-top: 5px solid #ff9e00;
+            border-radius: 50%;
+            margin: 20px auto;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        @keyframes bounce { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-20px); } }
+        
+        /* Navbar */
+        .navbar {
+            background: rgba(255,255,255,0.1);
+            backdrop-filter: blur(10px);
+        }
+        .navbar-brand { color: white !important; font-weight: 800; }
+        .navbar-brand span { color: #ff9e00; }
+        
+        /* Barra de búsqueda y filtros */
+        .search-card {
+            background: white;
+            border-radius: 20px;
+            padding: 20px;
+            margin-top: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+        }
+        .search-input {
+            border: 2px solid #e9ecef;
+            border-radius: 15px;
+            height: 55px;
+            padding: 0 20px;
+        }
+        .search-btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 15px;
+            height: 55px;
+            width: 55px;
+        }
+        .suggestions {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin-top: 15px;
+        }
+        .suggestion-badge {
+            background: #f8f9fa;
+            color: #495057;
+            padding: 8px 15px;
+            border-radius: 50px;
+            cursor: pointer;
+            border: 1px solid #e9ecef;
+        }
+        .suggestion-badge:hover {
+            background: #4361ee;
+            color: white;
+        }
+        
+        /* Filtros de dirección */
+        .filtros-direccion {
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
+        }
+        .filtro-btn {
+            flex: 1;
+            padding: 10px;
+            border: none;
+            border-radius: 10px;
+            font-weight: 600;
+            transition: all 0.3s;
+            cursor: pointer;
+        }
+        .filtro-btn.ida {
+            background: #d4edda;
+            color: #155724;
+            border: 2px solid #28a745;
+        }
+        .filtro-btn.ida.active {
+            background: #28a745;
+            color: white;
+        }
+        .filtro-btn.vuelta {
+            background: #f8d7da;
+            color: #721c24;
+            border: 2px solid #dc3545;
+        }
+        .filtro-btn.vuelta.active {
+            background: #dc3545;
+            color: white;
+        }
+        .filtro-btn.todos {
+            background: #e9ecef;
+            color: #495057;
+            border: 2px solid #6c757d;
+        }
+        .filtro-btn.todos.active {
+            background: #6c757d;
+            color: white;
+        }
+        
+        /* Mapa */
+        .map-card {
+            background: white;
+            border-radius: 20px;
+            overflow: hidden;
+            margin-top: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+        }
+        .map-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 15px;
+        }
+        #mapaPasajero {
+            height: 500px;
+            width: 100%;
+        }
+        
+        /* Leyenda */
+        .legend-card {
+            background: white;
+            border-radius: 15px;
+            padding: 15px;
+            margin-top: 15px;
+        }
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 0.9rem;
+        }
+        .legend-color {
+            width: 20px; height: 20px; border-radius: 4px;
+        }
+        .legend-color.ruta288 { background: #4361ee; }
+        .legend-color.ruta42 { background: #e63946; }
+        .legend-color.ruta15 { background: #ff9e00; }
+        .legend-color.ruta7 { background: #4cc9f0; }
+        .legend-color.ruta21 { background: #f72585; }
+        .legend-flecha-ida { color: #28a745; font-weight: bold; font-size: 1.2rem; }
+        .legend-flecha-vuelta { color: #dc3545; font-weight: bold; font-size: 1.2rem; }
+        
+        /* Lista de minibuses */
+        .minibuses-list { margin-top: 20px; }
+        .section-title { color: white; font-weight: 600; }
+        .minibus-card {
+            background: white;
+            border-radius: 15px;
+            padding: 15px;
+            margin-bottom: 10px;
+            cursor: pointer;
+            border-left: 5px solid transparent;
+            transition: all 0.3s;
+            position: relative;
+        }
+        .minibus-card:hover { transform: translateY(-2px); box-shadow: 0 5px 15px rgba(0,0,0,0.2); }
+        .minibus-card.seleccionado {
+            background: #e8f0fe;
+            border: 2px solid #4361ee;
+            transform: scale(1.02);
+        }
+        .minibus-icon {
+            width: 50px; height: 50px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 1.5rem;
+        }
+        .minibus-ruta { font-weight: 800; }
+        .minibus-destino { color: #6c757d; font-size: 0.9rem; }
+        .direccion-badge {
+            padding: 5px 10px;
+            border-radius: 50px;
+            font-size: 0.8rem;
+            font-weight: 600;
+        }
+        .direccion-ida { background: #d4edda; color: #155724; }
+        .direccion-vuelta { background: #f8d7da; color: #721c24; }
+        
+        /* Bottom Navigation */
+        .bottom-nav {
+            position: fixed; bottom: 0; left: 0; right: 0;
+            background: white;
+            display: flex;
+            justify-content: space-around;
+            padding: 10px 0;
+            box-shadow: 0 -2px 10px rgba(0,0,0,0.1);
+            border-radius: 20px 20px 0 0;
+            z-index: 1000;
+        }
+        .nav-item {
+            text-align: center;
+            color: #6c757d;
+            cursor: pointer;
+            flex: 1;
+        }
+        .nav-item.active { color: #4361ee; }
+        .nav-item i { font-size: 1.2rem; display: block; margin-bottom: 5px; }
+        .nav-item span { font-size: 0.7rem; }
+        
+        /* Modal QR */
+        .qr-container {
+            background: white;
+            padding: 20px;
+            border-radius: 15px;
+            display: inline-block;
+            margin: 0 auto;
+        }
+        #qrCode {
+            width: 250px;
+            height: 250px;
+            margin: 0 auto;
+        }
+        .chofer-info {
+            background: #f8f9fa;
+            border-radius: 10px;
+            padding: 10px;
+            margin-top: 15px;
+        }
+        
+        /* Marcador de usuario */
+        .marcador-usuario {
+            filter: drop-shadow(0 4px 6px rgba(0,0,0,0.3));
+        }
+        
+        @media (max-width: 768px) {
+            #mapaPasajero { height: 400px; }
+        }
+    </style>
+</head>
+<body>
+    <!-- Preloader -->
+    <div id="preloader">
+        <div class="loader">
+            <i class="fas fa-bus"></i>
+            <h2>Mi Chofer </h2>
+            <div class="spinner"></div>
+            <p class="mt-3">Cargando rutas de ...</p>
+        </div>
+    </div>
+
+    <!-- Navbar -->
+    <nav class="navbar navbar-expand-lg navbar-dark">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="#">Mi<span>Chofer</span></a>
+            <div class="dropdown">
+                <button class="btn btn-light btn-sm dropdown-toggle" data-bs-toggle="dropdown">
+                    <i class="fas fa-user-circle me-1"></i> <span id="userName">Invitado</span>
+                </button>
+                <ul class="dropdown-menu dropdown-menu-end">
+                    <li><a class="dropdown-item" href="#" onclick="verPerfil()"><i class="fas fa-id-card me-2"></i>Mi Perfil</a></li>
+                    <li><a class="dropdown-item" href="#" onclick="verHistorial()"><i class="fas fa-history me-2"></i>Historial</a></li>
+                    <li><a class="dropdown-item" href="#" onclick="verFavoritos()"><i class="fas fa-star me-2"></i>Favoritos</a></li>
+                    <li><hr class="dropdown-divider"></li>
+                    <li><a class="dropdown-item text-danger" href="#" onclick="cerrarSesion()"><i class="fas fa-sign-out-alt me-2"></i>Salir</a></li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container-fluid px-3">
+        <!-- Barra de búsqueda -->
+        <div class="search-card">
+            <h5 class="mb-3"><i class="fas fa-search-location me-2 text-primary"></i>Buscar ruta</h5>
+            <div class="d-flex gap-2">
+                <input type="text" class="form-control search-input" id="buscadorRuta" placeholder="Ej: 288, 42, 15...">
+                <button class="search-btn" onclick="buscarPorRuta()"><i class="fas fa-search"></i></button>
+            </div>
+            <div class="suggestions">
+                <span class="suggestion-badge" onclick="buscarRutaEspecifica('288')">Ruta 288</span>
+                <span class="suggestion-badge" onclick="buscarRutaEspecifica('42')">Ruta 42</span>
+                <span class="suggestion-badge" onclick="buscarRutaEspecifica('15')">Ruta 15</span>
+                <span class="suggestion-badge" onclick="buscarRutaEspecifica('7')">Ruta 7</span>
+                <span class="suggestion-badge" onclick="buscarRutaEspecifica('21')">Ruta 21</span>
+                <span class="suggestion-badge" onclick="mostrarTodos()">Mostrar todos</span>
+            </div>
+            
+            <!-- Filtros de dirección -->
+            <div class="filtros-direccion">
+                <button class="filtro-btn todos active" onclick="filtrarDireccion('todos')">🚌 Todos</button>
+                <button class="filtro-btn ida" onclick="filtrarDireccion('ida')">🔼 Solo IDA</button>
+                <button class="filtro-btn vuelta" onclick="filtrarDireccion('vuelta')">🔽 Solo VUELTA</button>
+            </div>
+        </div>
+
+        <!-- Mapa -->
+        <div class="map-card">
+            <div class="map-header d-flex justify-content-between">
+                <div><i class="fas fa-map-marked-alt me-2"></i><span id="mapaTitulo">Rutas de </span></div>
+                <div>
+                    <button class="btn btn-sm btn-light" onclick="centrarMapa()" title="Centrar en mi ubicación"><i class="fas fa-crosshairs"></i></button>
+                    <button class="btn btn-sm btn-light" onclick="recargarMapa()" title="Actualizar"><i class="fas fa-sync-alt"></i></button>
+                </div>
+            </div>
+            <div id="mapaPasajero"></div>
+        </div>
+
+        <!-- Leyenda -->
+        <div class="legend-card">
+            <div class="row">
+                <div class="col-6 col-md-3"><div class="legend-item"><span class="legend-color ruta288"></span>Ruta 288</div></div>
+                <div class="col-6 col-md-3"><div class="legend-item"><span class="legend-color ruta42"></span>Ruta 42</div></div>
+                <div class="col-6 col-md-3"><div class="legend-item"><span class="legend-color ruta15"></span>Ruta 15</div></div>
+                <div class="col-6 col-md-3"><div class="legend-item"><span class="legend-color ruta7"></span>Ruta 7</div></div>
+                <div class="col-6 col-md-3"><div class="legend-item"><span class="legend-color ruta21"></span>Ruta 21</div></div>
+                <div class="col-6 col-md-3"><div class="legend-item"><span class="legend-flecha-ida">🔼</span> Ida</div></div>
+                <div class="col-6 col-md-3"><div class="legend-item"><span class="legend-flecha-vuelta">🔽</span> Vuelta</div></div>
+            </div>
+        </div>
+
+        <!-- Lista de minibuses -->
+        <div class="minibuses-list">
+            <h6 class="section-title"><i class="fas fa-bus me-2"></i><span id="listaTitulo">Minibuses activos</span> <span class="badge bg-light text-dark ms-2" id="contadorMinibuses">0</span></h6>
+            <div id="listaMinibuses">
+                <div class="text-center text-white py-4">
+                    <div class="spinner-border text-light mb-2"></div>
+                    <p>Cargando minibuses...</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bottom Navigation -->
+    <div class="bottom-nav">
+        <div class="nav-item active" onclick="cambiarVista('inicio')"><i class="fas fa-home"></i><span>Inicio</span></div>
+        <div class="nav-item" onclick="cambiarVista('buscar')"><i class="fas fa-search"></i><span>Buscar</span></div>
+        <div class="nav-item" onclick="cambiarVista('qr')"><i class="fas fa-qrcode"></i><span>Pagar QR</span></div>
+        <div class="nav-item" onclick="cambiarVista('favoritos')"><i class="fas fa-star"></i><span>Favoritos</span></div>
+        <div class="nav-item" onclick="cambiarVista('perfil')"><i class="fas fa-user"></i><span>Perfil</span></div>
+    </div>
+
+    <!-- Modal QR -->
+    <div class="modal fade" id="modalQR" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header bg-success text-white">
+                    <h5 class="modal-title">
+                        <i class="fas fa-qrcode me-2"></i>
+                        Pago QR - Ruta <span id="qrRuta"></span>
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body text-center">
+                    <div class="qr-container" id="qrContainer"></div>
+                    
+                    <div class="chofer-info text-start mt-3">
+                        <p class="mb-1"><strong>🚌 Chofer:</strong> <span id="qrChofer"></span></p>
+                        <p class="mb-1"><strong>🪑 Asientos libres:</strong> <span id="qrAsientos"></span></p>
+                        <p class="mb-1"><strong>💰 Monto:</strong> Bs 2 por persona</p>
+                    </div>
+                    
+                    <button class="btn btn-success w-100 mt-3" onclick="confirmarPago()">
+                        <i class="fas fa-check me-2"></i>Confirmar pago
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+    <script>
+        // ===== VARIABLES GLOBALES =====
+        let mapa;
+        let marcadorUsuario;
+        let minibusesTodos = [];
+        let minibusesFiltrados = [];
+        let rutasCache = {};
+        let rutasPolylines = {};
+        let ubicacionActual = null;
+        let favoritos = JSON.parse(localStorage.getItem('favoritos') || '[]');
+        let filtroRutaActual = null;
+        let filtroDireccionActual = 'todos';
+        let minibusSeleccionado = null;
+        
+        // Colores ÚNICOS para cada ruta
+        const COLORES_RUTA = {
+            '288': '#4361ee',  // Azul
+            '42': '#e63946',    // Rojo
+            '15': '#ff9e00',    // Naranja
+            '7': '#4cc9f0',     // Celeste
+            '21': '#f72585'     // Rosa
+        };
+
+        // Datos de choferes para cada minibus
+        const CHOFERES = [
+            'Juan Pérez', 'Carlos Mamani', 'Roberto Quispe', 'Miguel Flores',
+            'Pedro Condori', 'Luis Choque', 'Javier Ticona', 'Fernando Huanca'
+        ];
+
+        // Nombres de calles de 
+        const CALLES = [
+            'Av. Arce', 'Av. 16 de Julio', 'Av. Mariscal Santa Cruz', 'Av. Illimani',
+            'Calle Loayza', 'Calle Potosí', 'Av. Saavedra', 'Av. Busch',
+            'Calle Sagárnaga', 'Av. Montes', 'Av. Villazón', 'Calle Colombia'
+        ];
+
+        // Rutas con coordenadas (puntos de referencia)
+        const RUTAS = {
+            '288': {
+                nombre: 'Villa Salomé - Centro',
+                puntos: [
+                    [-16.5234, -68.1423], // Villa Salomé
+                    [-16.5342, -68.1245], // Obrajes
+                    [-16.5045, -68.1456], // San Pedro
+                    [-16.4958, -68.1356]  // Plaza San Francisco
+                ]
+            },
+            '42': {
+                nombre: 'Sopocachi - Caja Ferroviaria',
+                puntos: [
+                    [-16.5145, -68.1256], // Sopocachi
+                    [-16.5045, -68.1345], // El Prado
+                    [-16.4945, -68.1456]  // Cementerio
+                ]
+            },
+            '15': {
+                nombre: 'San Pedro - Obrajes',
+                puntos: [
+                    [-16.5045, -68.1456], // San Pedro
+                    [-16.5145, -68.1256], // Sopocachi
+                    [-16.5342, -68.1245]  // Obrajes
+                ]
+            },
+            '7': {
+                nombre: 'Miraflores - El Alto',
+                puntos: [
+                    [-16.5055, -68.1156], // Miraflores
+                    [-16.4945, -68.1456], // Cementerio
+                    [-16.5045, -68.1645]  // El Alto
+                ]
+            },
+            '21': {
+                nombre: 'Calacoto - Centro',
+                puntos: [
+                    [-16.5423, -68.0789], // Calacoto
+                    [-16.5342, -68.0945], // San Miguel
+                    [-16.5145, -68.1256], // Sopocachi
+                    [-16.4958, -68.1356]  // San Francisco
+                ]
+            }
+        };
+
+        // ===== INICIALIZACIÓN =====
+        document.addEventListener('DOMContentLoaded', function() {
+            setTimeout(() => document.getElementById('preloader').classList.add('hidden'), 1500);
+            verificarSesion();
+            iniciarMapa();
+            obtenerUbicacion();
+            precargarTodasLasRutas().then(() => {
+                dibujarTodasLasRutas();
+                generarMinibuses();
+            });
+            setInterval(actualizarPosiciones, 3000);
+        });
+
+        // ===== INICIAR MAPA =====
+        function iniciarMapa() {
+            mapa = L.map('mapaPasajero').setView([-16.5, -68.15], 12);
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '© Mi Chofer '
+            }).addTo(mapa);
+        }
+
+        // ===== OBTENER UBICACIÓN DEL USUARIO =====
+        function obtenerUbicacion() {
+            if ("geolocation" in navigator) {
+                navigator.geolocation.getCurrentPosition(
+                    function(position) {
+                        ubicacionActual = {
+                            lat: position.coords.latitude,
+                            lng: position.coords.longitude
+                        };
+                        
+                        mapa.setView([ubicacionActual.lat, ubicacionActual.lng], 13);
+                        
+                        // Marcador del usuario con icono bonito y visible
+                        const iconoUsuario = L.divIcon({
+                            html: '<i class="fas fa-circle-user fa-4x" style="color: #ff9e00; text-shadow: 0 2px 6px rgba(0,0,0,0.5);"></i>',
+                            className: 'marcador-usuario',
+                            iconSize: [50, 50],
+                            iconAnchor: [25, 25]
+                        });
+                        
+                        marcadorUsuario = L.marker([ubicacionActual.lat, ubicacionActual.lng], { icon: iconoUsuario })
+                            .addTo(mapa)
+                            .bindPopup('📍 <b>Tu ubicación</b><br>Estás aquí');
+                    },
+                    function(error) {
+                        console.log('Error obteniendo ubicación:', error);
+                        Swal.fire({
+                            icon: 'warning',
+                            title: 'Ubicación no disponible',
+                            text: 'Activa el GPS para ver tu ubicación',
+                            timer: 3000
+                        });
+                        ubicacionActual = { lat: -16.5, lng: -68.15 };
+                    },
+                    {
+                        enableHighAccuracy: true,
+                        timeout: 10000
+                    }
+                );
+            } else {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'GPS no soportado',
+                    text: 'Tu dispositivo no tiene GPS'
+                });
+            }
+        }
+
+        // ===== PRECARGAR RUTAS DESDE OSRM =====
+        async function precargarTodasLasRutas() {
+            const promesas = [];
+            for (const [ruta, data] of Object.entries(RUTAS)) {
+                promesas.push(obtenerRutaPorCalles(ruta, data.puntos));
+            }
+            await Promise.all(promesas);
+            console.log('Todas las rutas precargadas');
+        }
+
+        // ===== OBTENER RUTA POR CALLES =====
+        async function obtenerRutaPorCalles(rutaNum, puntosReferencia) {
+            if (rutasCache[rutaNum]) return rutasCache[rutaNum];
+
+            try {
+                const coordenadas = puntosReferencia.map(p => `${p[1]},${p[0]}`).join(';');
+                const url = `https://router.project-osrm.org/route/v1/driving/${coordenadas}?overview=full&geometries=geojson`;
+                
+                const respuesta = await fetch(url);
+                const datos = await respuesta.json();
+                
+                if (datos.routes && datos.routes.length > 0) {
+                    const coords = datos.routes[0].geometry.coordinates;
+                    rutasCache[rutaNum] = coords.map(c => [c[1], c[0]]);
+                    return rutasCache[rutaNum];
+                }
+            } catch (error) {
+                console.log(`Error obteniendo ruta ${rutaNum}, usando líneas rectas`);
+            }
+            
+            // Fallback: líneas rectas entre puntos
+            const puntosRectos = [];
+            for (let i = 0; i < puntosReferencia.length - 1; i++) {
+                const inicio = puntosReferencia[i];
+                const fin = puntosReferencia[i + 1];
+                
+                for (let j = 0; j <= 20; j++) {
+                    const factor = j / 20;
+                    const lat = inicio[0] + (fin[0] - inicio[0]) * factor;
+                    const lng = inicio[1] + (fin[1] - inicio[1]) * factor;
+                    puntosRectos.push([lat, lng]);
+                }
+            }
+            rutasCache[rutaNum] = puntosRectos;
+            return rutasCache[rutaNum];
+        }
+
+        // ===== DIBUJAR TODAS LAS RUTAS =====
+        async function dibujarTodasLasRutas() {
+            for (const [ruta, data] of Object.entries(RUTAS)) {
+                const puntosRuta = rutasCache[ruta];
+                
+                rutasPolylines[ruta] = L.polyline(puntosRuta, {
+                    color: COLORES_RUTA[ruta],
+                    weight: 5,
+                    opacity: 0.9
+                }).addTo(mapa).bindPopup(`<b style="color: ${COLORES_RUTA[ruta]};">Ruta ${ruta}</b><br>${data.nombre}`);
+            }
+        }
+
+        // ===== OBTENER PUNTO EN RUTA =====
+        function obtenerPuntoEnRuta(ruta, avance, direccion) {
+            const puntosRuta = rutasCache[ruta];
+            if (!puntosRuta || puntosRuta.length === 0) return null;
+            
+            let puntos = [...puntosRuta];
+            
+            const indice = Math.floor((avance / 100) * (puntos.length - 1));
+            const indiceSeguro = Math.min(Math.max(0, indice), puntos.length - 1);
+            
+            return puntos[indiceSeguro];
+        }
+
+        // ===== OBTENER CALLE CERCANA =====
+        function obtenerCalleCercana(lat, lng) {
+            // Simular una calle cercana basada en coordenadas
+            const index = Math.floor(Math.abs(lat + lng) * 10) % CALLES.length;
+            return CALLES[index];
+        }
+
+        // ===== CALCULAR DISTANCIA A USUARIO =====
+        function calcularDistanciaAUsuario(lat, lng) {
+            if (!ubicacionActual) return null;
+            
+            const R = 6371; // Radio de la Tierra en km
+            const dLat = (lat - ubicacionActual.lat) * Math.PI / 180;
+            const dLon = (lng - ubicacionActual.lng) * Math.PI / 180;
+            const a = 
+                Math.sin(dLat/2) * Math.sin(dLat/2) +
+                Math.cos(ubicacionActual.lat * Math.PI / 180) * Math.cos(lat * Math.PI / 180) * 
+                Math.sin(dLon/2) * Math.sin(dLon/2);
+            const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+            const distancia = R * c;
+            
+            return distancia;
+        }
+
+        // ===== GENERAR MINIBUSES =====
+        function generarMinibuses() {
+            const rutas = ['288', '42', '15', '7', '21'];
+            minibusesTodos = [];
+            
+            for(const ruta of rutas) {
+                for(let i = 0; i < 4; i++) {
+                    const direccion = i < 2 ? 'ida' : 'vuelta';
+                    const avance = direccion === 'ida' ? 20 + (i * 20) : 80 - ((i-2) * 20);
+                    const punto = obtenerPuntoEnRuta(ruta, avance, direccion);
+                    if (!punto) continue;
+                    
+                    const disponibles = Math.floor(Math.random() * 10) + 2;
+                    
+                    minibusesTodos.push({
+                        id: `${ruta}-${direccion}-${i+1}`,
+                        ruta: ruta,
+                        nombreRuta: RUTAS[ruta].nombre,
+                        lat: punto[0],
+                        lng: punto[1],
+                        direccion: direccion,
+                        avance: avance,
+                        disponibles: disponibles,
+                        capacidad: 14,
+                        chofer: CHOFERES[Math.floor(Math.random() * CHOFERES.length)],
+                        placa: `${Math.floor(Math.random() * 1000)}-ABC`,
+                        calle: obtenerCalleCercana(punto[0], punto[1])
+                    });
+                }
+            }
+            
+            minibusesTodos = minibusesTodos.map(bus => {
+                const distanciaBase = Math.random() * 3 + 0.5;
+                return {
+                    ...bus,
+                    distancia: distanciaBase.toFixed(2),
+                    tiempoLlegada: Math.floor(distanciaBase * 3) + 2
+                };
+            });
+            
+            aplicarFiltros();
+        }
+
+        // ===== APLICAR FILTROS =====
+        function aplicarFiltros() {
+            let filtrados = minibusesTodos;
+            if (filtroRutaActual) {
+                filtrados = filtrados.filter(b => b.ruta === filtroRutaActual);
+            }
+            
+            if (filtroDireccionActual !== 'todos') {
+                filtrados = filtrados.filter(b => b.direccion === filtroDireccionActual);
+            }
+            
+            minibusesFiltrados = filtrados;
+            
+            if (minibusSeleccionado) {
+                const sigueExistendo = minibusesFiltrados.some(b => b.id === minibusSeleccionado.id);
+                if (!sigueExistendo) {
+                    minibusSeleccionado = null;
+                }
+            }
+            
+            actualizarMapaConMinibuses(minibusesFiltrados);
+            actualizarListaMinibuses(minibusesFiltrados);
+            document.getElementById('contadorMinibuses').textContent = minibusesFiltrados.length;
+            
+            let titulo = 'Minibuses activos';
+            if (filtroRutaActual) titulo = `Ruta ${filtroRutaActual}`;
+            document.getElementById('listaTitulo').textContent = titulo;
+        }
+
+        // ===== FILTRAR POR DIRECCIÓN =====
+        function filtrarDireccion(direccion) {
+            filtroDireccionActual = direccion;
+            
+            document.querySelectorAll('.filtro-btn').forEach(btn => btn.classList.remove('active'));
+            if (direccion === 'todos') document.querySelector('.filtro-btn.todos').classList.add('active');
+            if (direccion === 'ida') document.querySelector('.filtro-btn.ida').classList.add('active');
+            if (direccion === 'vuelta') document.querySelector('.filtro-btn.vuelta').classList.add('active');
+            
+            aplicarFiltros();
+        }
+
+        // ===== ACTUALIZAR POSICIONES =====
+        function actualizarPosiciones() {
+            minibusesFiltrados.forEach(bus => {
+                if (bus.direccion === 'ida') {
+                    bus.avance = Math.min(100, bus.avance + 0.3);
+                } else {
+                    bus.avance = Math.max(0, bus.avance - 0.3);
+                }
+                
+                const nuevoPunto = obtenerPuntoEnRuta(bus.ruta, bus.avance, bus.direccion);
+                if (nuevoPunto) {
+                    bus.lat = nuevoPunto[0];
+                    bus.lng = nuevoPunto[1];
+                    bus.calle = obtenerCalleCercana(bus.lat, bus.lng);
+                }
+            });
+            
+            actualizarMapaConMinibuses(minibusesFiltrados);
+            actualizarListaMinibuses(minibusesFiltrados);
+        }
+
+        // ===== ACTUALIZAR MAPA CON MINIBUSES =====
+        function actualizarMapaConMinibuses(minibuses) {
+            mapa.eachLayer(layer => {
+                if(layer instanceof L.Marker && layer !== marcadorUsuario) {
+                    mapa.removeLayer(layer);
+                }
+            });
+            
+            minibuses.forEach(bus => {
+                const colorRuta = COLORES_RUTA[bus.ruta];
+                const colorFlecha = bus.direccion === 'ida' ? '#28a745' : '#dc3545';
+                const iconoDireccion = bus.direccion === 'ida' ? '↑' : '↓';
+                
+                const icono = L.divIcon({
+                    html: `
+                        <div style="position: relative;">
+                            <div style="
+                                background: ${colorRuta};
+                                width: 48px;
+                                height: 48px;
+                                border-radius: 50%;
+                                display: flex;
+                                flex-direction: column;
+                                align-items: center;
+                                justify-content: center;
+                                color: white;
+                                font-weight: bold;
+                                box-shadow: 0 4px 10px rgba(0,0,0,0.4);
+                                border: 3px solid ${minibusSeleccionado?.id === bus.id ? '#ff9e00' : 'white'};
+                            ">
+                                <i class="fas fa-bus" style="font-size: 20px;"></i>
+                                <span style="font-size: 10px; margin-top: -2px;">${bus.ruta}</span>
+                            </div>
+                            <div style="
+                                position: absolute;
+                                bottom: -10px;
+                                left: 50%;
+                                transform: translateX(-50%);
+                                color: ${colorFlecha};
+                                font-size: 24px;
+                                font-weight: bold;
+                                text-shadow: 0 2px 4px rgba(0,0,0,0.3);
+                            ">${iconoDireccion}</div>
+                            <div style="
+                                position: absolute;
+                                top: -8px;
+                                right: -8px;
+                                background: ${bus.disponibles <= 3 ? '#dc3545' : '#28a745'};
+                                color: white;
+                                border-radius: 20px;
+                                padding: 4px 8px;
+                                font-size: 12px;
+                                font-weight: bold;
+                                border: 2px solid white;
+                                box-shadow: 0 2px 5px rgba(0,0,0,0.3);
+                                min-width: 30px;
+                                text-align: center;
+                            ">${bus.disponibles}</div>
+                        </div>
+                    `,
+                    className: `marcador-bus`,
+                    iconSize: [48, 70],
+                    iconAnchor: [24, 60]
+                });
+                
+                const marcador = L.marker([bus.lat, bus.lng], { icon: icono })
+                    .addTo(mapa)
+                    .on('click', () => mostrarDetalleMinibus(bus));
+                
+                bus.marcador = marcador;
+            });
+        }
+
+        // ===== MOSTRAR DETALLE DEL MINIBUS (VENTANA EMERGENTE) =====
+        function mostrarDetalleMinibus(bus) {
+            minibusSeleccionado = bus;
+            
+            // Calcular distancia al usuario
+            let distanciaTexto = 'Desconocida';
+            if (ubicacionActual) {
+                const distancia = calcularDistanciaAUsuario(bus.lat, bus.lng);
+                if (distancia !== null) {
+                    distanciaTexto = distancia < 1 
+                        ? `${Math.round(distancia * 1000)} metros` 
+                        : `${distancia.toFixed(2)} km`;
+                }
+            }
+            
+            // Determinar si es favorito
+            const esFavorito = favoritos.includes(bus.ruta);
+            const estrellaIcono = esFavorito ? 'fas fa-star' : 'far fa-star';
+            const estrellaColor = esFavorito ? '#ffc107' : '#6c757d';
+            
+            // Crear contenido del popup
+            const popupContent = document.createElement('div');
+            popupContent.innerHTML = `
+                <div style="text-align: center; min-width: 250px;">
+                    <h5 style="color: ${COLORES_RUTA[bus.ruta]}; margin-bottom: 10px;">
+                        🚌 Ruta ${bus.ruta}
+                    </h5>
+                    
+                    <div style="background: #f8f9fa; border-radius: 10px; padding: 10px; margin-bottom: 10px; text-align: left;">
+                        <p style="margin: 5px 0;"><strong>📍 Calle:</strong> ${bus.calle}</p>
+                        <p style="margin: 5px 0;">
+                            <strong>Dirección:</strong> 
+                            <span style="color: ${bus.direccion === 'ida' ? '#28a745' : '#dc3545'}; font-weight: bold;">
+                                ${bus.direccion === 'ida' ? '🔼 IDA' : '🔽 VUELTA'}
+                            </span>
+                        </p>
+                        <p style="margin: 5px 0;"><strong>👤 Chofer:</strong> ${bus.chofer}</p>
+                        <p style="margin: 5px 0;"><strong>🪑 Asientos:</strong> ${bus.disponibles}/${bus.capacidad}</p>
+                        <p style="margin: 5px 0;"><strong>⏱️ Llegada:</strong> ~${bus.tiempoLlegada} min</p>
+                        <p style="margin: 5px 0;"><strong>📏 Distancia:</strong> ${distanciaTexto}</p>
+                    </div>
+                    
+                    <div style="display: flex; gap: 10px; justify-content: center;">
+                        <button class="btn btn-sm btn-success" onclick="pagarQR('${bus.id}')" style="flex: 2;">
+                            <i class="fas fa-qrcode me-1"></i>Pagar QR
+                        </button>
+                        <button class="btn btn-sm btn-outline-warning" onclick="toggleFavoritoDesdePopup('${bus.ruta}')" style="flex: 1;">
+                            <i class="${estrellaIcono}" style="color: ${estrellaColor};"></i>
+                        </button>
+                    </div>
+                </div>
+            `;
+            
+            // Abrir popup
+            bus.marcador.bindPopup(popupContent).openPopup();
+            
+            // Actualizar selección en la lista
+            document.querySelectorAll('.minibus-card').forEach(card => {
+                card.classList.remove('seleccionado');
+            });
+            const cardSeleccionada = document.getElementById(`card-${bus.id}`);
+            if (cardSeleccionada) {
+                cardSeleccionada.classList.add('seleccionado');
+            }
+            
+            // Actualizar mapa para resaltar el minibus
+            actualizarMapaConMinibuses(minibusesFiltrados);
+        }
+
+        // ===== TOGGLE FAVORITO DESDE POPUP =====
+        function toggleFavoritoDesdePopup(ruta) {
+            const index = favoritos.indexOf(ruta);
+            if (index === -1) {
+                favoritos.push(ruta);
+                Swal.fire({
+                    icon: 'success',
+                    title: '⭐ Agregado a favoritos',
+                    text: `Ruta ${ruta} guardada`,
+                    timer: 1500,
+                    showConfirmButton: false
+                });
+            } else {
+                favoritos.splice(index, 1);
+                Swal.fire({
+                    icon: 'info',
+                    title: 'Eliminado de favoritos',
+                    text: `Ruta ${ruta} removida`,
+                    timer: 1500,
+                    showConfirmButton: false
+                });
+            }
+            
+            localStorage.setItem('favoritos', JSON.stringify(favoritos));
+            actualizarListaMinibuses(minibusesFiltrados);
+            
+            // Actualizar el popup si está abierto
+            if (minibusSeleccionado && minibusSeleccionado.ruta === ruta) {
+                mostrarDetalleMinibus(minibusSeleccionado);
+            }
+        }
+
+        // ===== ACTUALIZAR LISTA =====
+        function actualizarListaMinibuses(minibuses) {
+            const contenedor = document.getElementById('listaMinibuses');
+            
+            if(minibuses.length === 0) {
+                contenedor.innerHTML = '<div class="text-center text-white py-4">No hay minibuses con estos filtros</div>';
+                return;
+            }
+            
+            minibuses.sort((a, b) => parseFloat(a.distancia) - parseFloat(b.distancia));
+            
+            const html = minibuses.map(bus => {
+                const colorRuta = COLORES_RUTA[bus.ruta];
+                const esFavorito = favoritos.includes(bus.ruta);
+                const seleccionado = minibusSeleccionado?.id === bus.id ? 'seleccionado' : '';
+                
+                return `
+                    <div class="minibus-card ${seleccionado}" id="card-${bus.id}" style="border-left-color: ${colorRuta}" onclick="mostrarDetalleMinibus(${JSON.stringify(bus).replace(/"/g, '&quot;')})">
+                        <div class="d-flex gap-3">
+                            <div class="minibus-icon" style="background: ${colorRuta}">
+                                <i class="fas fa-bus"></i>
+                            </div>
+                            <div class="flex-grow-1">
+                                <div class="d-flex justify-content-between">
+                                    <div>
+                                        <div class="minibus-ruta" style="color: ${colorRuta};">Ruta ${bus.ruta}</div>
+                                        <div class="minibus-destino">${bus.nombreRuta}</div>
+                                    </div>
+                                    <span class="direccion-badge ${bus.direccion === 'ida' ? 'direccion-ida' : 'direccion-vuelta'}">
+                                        ${bus.direccion === 'ida' ? '🔼 IDA' : '🔽 VUELTA'}
+                                    </span>
+                                </div>
+                                <div class="d-flex justify-content-between align-items-center mt-2">
+                                    <div>
+                                        <span class="badge ${bus.disponibles <= 3 ? 'bg-danger' : 'bg-success'} p-2">
+                                            <i class="fas fa-chair me-1"></i>${bus.disponibles} libres
+                                        </span>
+                                    </div>
+                                    <small class="text-muted">
+                                        <i class="fas fa-clock me-1"></i>${bus.tiempoLlegada} min
+                                    </small>
+                                    <small class="text-muted">
+                                        <i class="fas fa-map-marker-alt me-1"></i>${bus.distancia} km
+                                    </small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+            
+            contenedor.innerHTML = html;
+        }
+
+        // ===== PAGAR QR =====
+        function pagarQR(id) {
+            const bus = minibusesFiltrados.find(b => b.id === id);
+            if (!bus) return;
+            
+            document.getElementById('qrRuta').textContent = bus.ruta;
+            document.getElementById('qrChofer').textContent = bus.chofer;
+            document.getElementById('qrAsientos').textContent = bus.disponibles;
+            
+            const qrContainer = document.getElementById('qrContainer');
+            qrContainer.innerHTML = '';
+            
+            const qrData = {
+                minibus: `Ruta ${bus.ruta}`,
+                chofer: bus.chofer,
+                placa: bus.placa,
+                monto: 2,
+                timestamp: new Date().getTime()
+            };
+            
+            new QRCode(qrContainer, {
+                text: JSON.stringify(qrData),
+                width: 250,
+                height: 250
+            });
+            
+            const modal = new bootstrap.Modal(document.getElementById('modalQR'));
+            modal.show();
+        }
+
+        // ===== CONFIRMAR PAGO =====
+        function confirmarPago() {
+            Swal.fire({
+                icon: 'success',
+                title: '✅ Pago exitoso',
+                text: 'Gracias por viajar con Mi Chofer ',
+                timer: 2000,
+                showConfirmButton: false
+            });
+            
+            bootstrap.Modal.getInstance(document.getElementById('modalQR')).hide();
+        }
+
+        // ===== BUSCAR POR RUTA =====
+        function buscarPorRuta() {
+            const ruta = document.getElementById('buscadorRuta').value.trim();
+            if(!ruta || !COLORES_RUTA[ruta]) {
+                Swal.fire('Ruta no válida', 'Ingresa una ruta válida: 288, 42, 15, 7, 21', 'warning');
+                return;
+            }
+            
+            filtroRutaActual = ruta;
+            document.querySelector('.filtro-btn.todos').classList.add('active');
+            aplicarFiltros();
+            document.getElementById('mapaTitulo').textContent = `Ruta ${ruta}`;
+        }
+
+        function buscarRutaEspecifica(ruta) {
+            document.getElementById('buscadorRuta').value = ruta;
+            filtroRutaActual = ruta;
+            document.querySelector('.filtro-btn.todos').classList.add('active');
+            aplicarFiltros();
+            document.getElementById('mapaTitulo').textContent = `Ruta ${ruta}`;
+        }
+
+        function mostrarTodos() {
+            filtroRutaActual = null;
+            filtroDireccionActual = 'todos';
+            document.getElementById('buscadorRuta').value = '';
+            document.getElementById('mapaTitulo').textContent = 'Rutas de ';
+            
+            document.querySelectorAll('.filtro-btn').forEach(btn => btn.classList.remove('active'));
+            document.querySelector('.filtro-btn.todos').classList.add('active');
+            
+            aplicarFiltros();
+        }
+
+        // ===== FUNCIONES AUXILIARES =====
+        function centrarMapa() {
+            if(ubicacionActual) {
+                mapa.setView([ubicacionActual.lat, ubicacionActual.lng], 14);
+            } else {
+                mapa.setView([-16.5, -68.15], 12);
+            }
+        }
+
+        function recargarMapa() {
+            generarMinibuses();
+        }
+
+        function verificarSesion() {
+            const invitado = localStorage.getItem('modoInvitado') === 'true';
+            const userData = localStorage.getItem('userData');
+            document.getElementById('userName').textContent = invitado ? 'Invitado' : (userData ? JSON.parse(userData).nombre : 'Invitado');
+        }
+
+        function cambiarVista(vista) {
+            document.querySelectorAll('.nav-item').forEach(i => i.classList.remove('active'));
+            event.currentTarget.classList.add('active');
+            
+            if(vista === 'inicio') mostrarTodos();
+            if(vista === 'buscar') document.getElementById('buscadorRuta').focus();
+            if(vista === 'qr') {
+                if (minibusSeleccionado) {
+                    pagarQR(minibusSeleccionado.id);
+                } else {
+                    Swal.fire('Selecciona un minibus', 'Haz clic en un minibus para pagar', 'info');
+                }
+            }
+            if(vista === 'favoritos') verFavoritos();
+            if(vista === 'perfil') verPerfil();
+        }
+
+        function verFavoritos() {
+            if(favoritos.length === 0) {
+                Swal.fire('Sin favoritos', 'Agrega rutas a favoritos haciendo clic en la estrella', 'info');
+                return;
+            }
+            
+            const favs = minibusesTodos.filter(b => favoritos.includes(b.ruta));
+            if(favs.length > 0) {
+                minibusesFiltrados = favs;
+                filtroRutaActual = 'favoritos';
+                actualizarMapaConMinibuses(favs);
+                actualizarListaMinibuses(favs);
+                document.getElementById('contadorMinibuses').textContent = favs.length;
+                document.getElementById('mapaTitulo').textContent = 'Rutas favoritas';
+                document.getElementById('listaTitulo').textContent = 'Tus favoritos';
+            }
+        }
+
+        function verPerfil() {
+            Swal.fire({
+                title: 'Mi Perfil',
+                html: `
+                    <div style="text-align: left;">
+                        <p><strong>Nombre:</strong> Juan Pérez</p>
+                        <p><strong>Celular:</strong> 71234567</p>
+                        <p><strong>Viajes realizados:</strong> 24</p>
+                        <p><strong>Saldo:</strong> Bs 50</p>
+                        <p><strong>Rutas favoritas:</strong> ${favoritos.length > 0 ? favoritos.join(', ') : 'Ninguna'}</p>
+                    </div>
+                `,
+                icon: 'info'
+            });
+        }
+
+        function verHistorial() {
+            Swal.fire({
+                title: 'Historial de viajes',
+                html: `
+                    <div style="text-align: left; max-height: 300px; overflow-y: auto;">
+                        <p>📅 Hoy 10:30 - Ruta 288 - Bs 2</p>
+                        <p>📅 Hoy 08:15 - Ruta 42 - Bs 2</p>
+                        <p>📅 Ayer 18:45 - Ruta 15 - Bs 2</p>
+                        <p>📅 Ayer 07:30 - Ruta 288 - Bs 2</p>
+                        <p>📅 15/03/2024 - Ruta 21 - Bs 2</p>
+                        <p>📅 14/03/2024 - Ruta 7 - Bs 2</p>
+                    </div>
+                    <hr>
+                    <p><strong>Total gastado:</strong> Bs 12</p>
+                `,
+                icon: 'info',
+                width: 350
+            });
+        }
+
+        function cerrarSesion() {
+            Swal.fire({
+                title: '¿Cerrar sesión?',
+                icon: 'question',
+                showCancelButton: true,
+                confirmButtonColor: '#dc3545',
+                confirmButtonText: 'Sí, salir'
+            }).then((result) => {
+                if(result.isConfirmed) {
+                    localStorage.clear();
+                    window.location.href = 'login.html';
+                }
+            });
+        }
+
+        // ===== EXPORTAR FUNCIONES =====
+        window.buscarPorRuta = buscarPorRuta;
+        window.buscarRutaEspecifica = buscarRutaEspecifica;
+        window.mostrarTodos = mostrarTodos;
+        window.filtrarDireccion = filtrarDireccion;
+        window.centrarMapa = centrarMapa;
+        window.recargarMapa = recargarMapa;
+        window.mostrarDetalleMinibus = mostrarDetalleMinibus;
+        window.pagarQR = pagarQR;
+        window.confirmarPago = confirmarPago;
+        window.toggleFavoritoDesdePopup = toggleFavoritoDesdePopup;
+        window.cambiarVista = cambiarVista;
+        window.verFavoritos = verFavoritos;
+        window.verPerfil = verPerfil;
+        window.verHistorial = verHistorial;
+        window.cerrarSesion = cerrarSesion;
+    </script>
+</body>
+</html>

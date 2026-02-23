@@ -1,0 +1,121 @@
+// ===== VARIABLES PARA QR =====
+let qrCode;
+let qrTimer;
+let tiempoRestanteQR = 300; // 5 minutos en segundos
+
+// ===== GENERAR QR =====
+function generarQR() {
+    const qrContainer = document.getElementById('qrCode');
+    qrContainer.innerHTML = ''; // Limpiar
+    
+    // Datos del QR (dinámicos)
+    const qrData = {
+        tipo: 'pago_minibus',
+        minibusId: 'CH-2880',
+        chofer: document.getElementById('nombreChofer').textContent,
+        ruta: rutaActual,
+        monto: TARIFA_PASAJE,
+        timestamp: new Date().getTime(),
+        token: generarTokenUnico(),
+        expira: new Date().getTime() + 300000 // +5 minutos
+    };
+    
+    // Convertir a string y generar QR
+    const qrString = JSON.stringify(qrData);
+    
+    qrCode = new QRCode(qrContainer, {
+        text: qrString,
+        width: 200,
+        height: 200,
+        colorDark: "#000000",
+        colorLight: "#ffffff",
+        correctLevel: QRCode.CorrectLevel.H
+    });
+    
+    // Iniciar contador regresivo
+    iniciarTimerQR();
+    
+    console.log('QR Generado:', qrData);
+}
+
+// ===== GENERAR TOKEN ÚNICO =====
+function generarTokenUnico() {
+    return Math.random().toString(36).substring(2, 15) + 
+           Math.random().toString(36).substring(2, 15) +
+           Date.now().toString(36);
+}
+
+// ===== INICIAR TIMER QR =====
+function iniciarTimerQR() {
+    if(qrTimer) clearInterval(qrTimer);
+    
+    tiempoRestanteQR = 300;
+    actualizarTimerDisplay();
+    
+    qrTimer = setInterval(() => {
+        tiempoRestanteQR--;
+        actualizarTimerDisplay();
+        
+        if(tiempoRestanteQR <= 0) {
+            clearInterval(qrTimer);
+            regenerarQR();
+        }
+    }, 1000);
+}
+
+// ===== ACTUALIZAR DISPLAY DEL TIMER =====
+function actualizarTimerDisplay() {
+    const minutos = Math.floor(tiempoRestanteQR / 60);
+    const segundos = tiempoRestanteQR % 60;
+    document.getElementById('qrTimer').textContent = 
+        `${minutos.toString().padStart(2, '0')}:${segundos.toString().padStart(2, '0')}`;
+    
+    // Cambiar color si está por expirar
+    if(tiempoRestanteQR < 30) {
+        document.getElementById('qrTimer').style.color = '#e63946';
+    } else {
+        document.getElementById('qrTimer').style.color = '';
+    }
+}
+
+// ===== REGENERAR QR =====
+function regenerarQR() {
+    clearInterval(qrTimer);
+    generarQR();
+    
+    // Notificación
+    showNotification('QR renovado', 'info');
+}
+
+// ===== VERIFICAR PAGO QR =====
+function verificarPagoQR(token, monto) {
+    // Aquí se validaría con el backend
+    if(token && monto === TARIFA_PASAJE) {
+        pagoQRRecibido(monto, 'Pasajero');
+        return true;
+    }
+    return false;
+}
+
+// ===== PROCESAR PAGO QR RECIBIDO (WebSocket) =====
+function procesarPagoQR(data) {
+    const { token, monto, pasajeroId } = data;
+    
+    if(verificarPagoQR(token, monto)) {
+        pagoQRRecibido(monto, `Pasajero #${pasajeroId}`);
+        
+        // Confirmar al servidor
+        if(socket) {
+            socket.emit('pago-confirmado', {
+                token,
+                monto,
+                pasajeroId,
+                timestamp: new Date()
+            });
+        }
+    }
+}
+
+// Exportar funciones
+window.generarQR = generarQR;
+window.regenerarQR = regenerarQR;

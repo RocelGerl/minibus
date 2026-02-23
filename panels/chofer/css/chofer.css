@@ -1,0 +1,542 @@
+/* ===== VARIABLES ===== */
+:root {
+    --color-primary: #4361ee;
+    --color-success: #4cc9f0;
+    --color-warning: #f72585;
+    --color-danger: #e63946;
+    --color-llajta: #ff9e00;
+    --gradient-primary: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    --gradient-success: linear-gradient(135deg, #4cc9f0 0%, #4361ee 100%);
+    --gradient-warning: linear-gradient(135deg, #f72585 0%, #e63946 100%);
+    --gradient-llajta: linear-gradient(135deg, #ff9e00 0%, #ff4d4d 100%);
+}
+
+/* ===== PRELOADER ===== */
+.chofer-preloader {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: var(--gradient-primary);
+    z-index: 9999;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    transition: opacity 0.5s ease, visibility 0.5s ease;
+}
+
+.chofer-preloader.hidden {
+    opacity: 0;
+    visibility: hidden;
+}
+
+.loader-content {
+    text-align: center;
+    color: white;
+}
+
+/* ===== NAVBAR ===== */
+.navbar {
+    background: var(--gradient-primary) !important;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+}
+
+/* Indicador de conexión */
+.conexion-indicator {
+    display: flex;
+    align-items: center;
+    background: rgba(255,255,255,0.2);
+    padding: 5px 12px;
+    border-radius: 50px;
+    color: white;
+    font-size: 0.9rem;
+}
+
+.punto {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    display: inline-block;
+    margin-right: 6px;
+}
+
+.punto.verde {
+    background: #4cc9f0;
+    box-shadow: 0 0 10px #4cc9f0;
+    animation: pulseVerde 2s infinite;
+}
+
+@keyframes pulseVerde {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.5; }
+}
+
+/* Reloj digital */
+.reloj-digital {
+    background: rgba(0,0,0,0.3);
+    padding: 5px 12px;
+    border-radius: 50px;
+    color: white;
+    font-family: 'Courier New', monospace;
+    font-size: 1.1rem;
+    font-weight: bold;
+    letter-spacing: 2px;
+}
+
+/* ===== TARJETA INICIO JORNADA ===== */
+.card-inicio-jornada {
+    background: white;
+    border-radius: 30px;
+    padding: 40px;
+    box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+    max-width: 600px;
+    margin: 0 auto;
+    position: relative;
+    overflow: hidden;
+}
+
+.card-inicio-jornada::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 5px;
+    background: var(--gradient-llajta);
+}
+
+/* ===== TARJETAS CONTADOR ===== */
+.card-contador {
+    border: none;
+    border-radius: 30px;
+    color: white;
+    box-shadow: 0 20px 30px rgba(0,0,0,0.2);
+    transition: all 0.3s ease;
+    overflow: hidden;
+    position: relative;
+}
+
+.card-contador::before {
+    content: '';
+    position: absolute;
+    top: -50%;
+    left: -50%;
+    width: 200%;
+    height: 200%;
+    background: linear-gradient(45deg, transparent, rgba(255,255,255,0.1), transparent);
+    transform: rotate(45deg);
+    animation: brilloCard 3s infinite;
+}
+
+@keyframes brilloCard {
+    0% { transform: translateX(-100%) rotate(45deg); }
+    100% { transform: translateX(100%) rotate(45deg); }
+}
+
+.card-contador.pasajeros {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+}
+
+.card-contador.efectivo {
+    background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+}
+
+.card-contador .icono {
+    width: 70px;
+    height: 70px;
+    background: rgba(255,255,255,0.2);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 15px;
+    font-size: 2rem;
+}
+
+.card-contador .titulo {
+    font-size: 1.2rem;
+    letter-spacing: 2px;
+    opacity: 0.9;
+    margin-bottom: 10px;
+}
+
+.card-contador .numero {
+    font-size: 5rem;
+    font-weight: 800;
+    line-height: 1;
+    margin-bottom: 5px;
+    text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+}
+
+.card-contador .subtitulo {
+    opacity: 0.8;
+    font-size: 0.9rem;
+}
+
+/* Botones de acción */
+.btn-accion {
+    width: 100%;
+    padding: 15px;
+    border: none;
+    border-radius: 15px;
+    color: white;
+    font-weight: bold;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    transition: all 0.3s ease;
+}
+
+.btn-accion i {
+    font-size: 1.5rem;
+    margin-bottom: 5px;
+}
+
+.btn-accion:hover {
+    transform: translateY(-3px);
+    filter: brightness(1.1);
+}
+
+.btn-accion:active {
+    transform: translateY(0);
+}
+
+.btn-sube {
+    background: linear-gradient(135deg, #4cc9f0 0%, #4361ee 100%);
+    box-shadow: 0 5px 15px rgba(67, 97, 238, 0.4);
+}
+
+.btn-baja {
+    background: linear-gradient(135deg, #f72585 0%, #e63946 100%);
+    box-shadow: 0 5px 15px rgba(247, 37, 133, 0.4);
+}
+
+.btn-ingreso {
+    background: linear-gradient(135deg, #4cc9f0 0%, #2ecc71 100%);
+    box-shadow: 0 5px 15px rgba(46, 204, 113, 0.4);
+}
+
+.btn-gasto {
+    background: linear-gradient(135deg, #f39c12 0%, #e67e22 100%);
+    box-shadow: 0 5px 15px rgba(243, 156, 18, 0.4);
+}
+
+/* Últimos movimientos */
+.ultimos-movimientos {
+    background: rgba(0,0,0,0.2);
+    border-radius: 10px;
+    padding: 10px;
+    max-height: 100px;
+    overflow-y: auto;
+}
+
+.movimiento-item {
+    display: flex;
+    justify-content: space-between;
+    padding: 3px 0;
+    border-bottom: 1px solid rgba(255,255,255,0.1);
+    font-size: 0.8rem;
+}
+
+/* Resumen efectivo */
+.resumen-efectivo {
+    background: rgba(0,0,0,0.2);
+    border-radius: 10px;
+    padding: 10px;
+    font-size: 0.9rem;
+}
+
+/* ===== TARJETA MAPA ===== */
+.card-mapa {
+    border: none;
+    border-radius: 20px;
+    overflow: hidden;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+}
+
+.card-mapa .card-header {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border: none;
+}
+
+#mapaChofer {
+    width: 100%;
+    height: 350px;
+    z-index: 1;
+}
+
+/* ===== TARJETA QR ===== */
+.card-qr {
+    border: none;
+    border-radius: 20px;
+    overflow: hidden;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+    height: 100%;
+}
+
+.card-qr .card-header {
+    background: linear-gradient(135deg, #4cc9f0 0%, #4361ee 100%);
+    border: none;
+}
+
+.qr-container {
+    background: white;
+    padding: 20px;
+    border-radius: 15px;
+    display: inline-block;
+    position: relative;
+    overflow: hidden;
+}
+
+.qr-container::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    border: 2px solid transparent;
+    border-radius: 15px;
+    animation: bordeQR 2s infinite;
+}
+
+@keyframes bordeQR {
+    0%, 100% { border-color: transparent; }
+    50% { border-color: #4cc9f0; }
+}
+
+#qrCode {
+    width: 200px;
+    height: 200px;
+    margin: 0 auto;
+}
+
+/* Últimos pagos */
+.ultimos-pagos {
+    background: #f8f9fa;
+    border-radius: 10px;
+    padding: 10px;
+    max-height: 150px;
+    overflow-y: auto;
+}
+
+.pago-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px;
+    border-bottom: 1px solid #dee2e6;
+}
+
+.pago-item:last-child {
+    border-bottom: none;
+}
+
+.pago-monto {
+    font-weight: bold;
+    color: #28a745;
+}
+
+.pago-hora {
+    font-size: 0.8rem;
+    color: #6c757d;
+}
+
+/* ===== TARJETAS ESTADÍSTICAS ===== */
+.card-estadistica, .card-paradas, .card-acciones {
+    border: none;
+    border-radius: 20px;
+    box-shadow: 0 5px 20px rgba(0,0,0,0.05);
+    background: white;
+    transition: all 0.3s ease;
+}
+
+.card-estadistica:hover, .card-paradas:hover, .card-acciones:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+}
+
+.estadisticas-grid {
+    display: grid;
+    gap: 10px;
+    margin-top: 15px;
+}
+
+.estadistica-item {
+    display: flex;
+    justify-content: space-between;
+    padding: 8px;
+    background: #f8f9fa;
+    border-radius: 8px;
+}
+
+.estadistica-item .label {
+    color: #6c757d;
+    font-size: 0.9rem;
+}
+
+.estadistica-item .valor {
+    font-weight: bold;
+    color: #4361ee;
+}
+
+/* Lista de paradas */
+.paradas-lista {
+    margin-top: 15px;
+    max-height: 200px;
+    overflow-y: auto;
+}
+
+.parada-item {
+    display: flex;
+    align-items: center;
+    padding: 10px;
+    border-bottom: 1px solid #f0f0f0;
+    transition: all 0.3s ease;
+}
+
+.parada-item:hover {
+    background: #f8f9fa;
+    transform: translateX(5px);
+}
+
+.parada-item .orden {
+    width: 25px;
+    height: 25px;
+    background: #667eea;
+    color: white;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.8rem;
+    margin-right: 10px;
+}
+
+.parada-item .nombre {
+    flex: 1;
+}
+
+.parada-item .distancia {
+    color: #6c757d;
+    font-size: 0.8rem;
+}
+
+/* ===== BOTÓN DE PÁNICO ===== */
+.boton-panico-container {
+    position: fixed;
+    bottom: 30px;
+    right: 30px;
+    z-index: 1000;
+}
+
+.boton-panico {
+    width: 70px;
+    height: 70px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #e63946 0%, #c1121f 100%);
+    border: none;
+    color: white;
+    font-size: 2rem;
+    cursor: pointer;
+    box-shadow: 0 10px 20px rgba(230, 57, 70, 0.4);
+    animation: latido 1.5s infinite;
+    transition: all 0.3s ease;
+    position: relative;
+    z-index: 2;
+}
+
+.boton-panico:hover {
+    transform: scale(1.1);
+    box-shadow: 0 15px 30px rgba(230, 57, 70, 0.6);
+}
+
+.tooltip-panico {
+    position: absolute;
+    right: 80px;
+    top: 50%;
+    transform: translateY(-50%);
+    background: rgba(0,0,0,0.8);
+    color: white;
+    padding: 5px 10px;
+    border-radius: 5px;
+    font-size: 0.9rem;
+    white-space: nowrap;
+    opacity: 0;
+    transition: all 0.3s ease;
+    pointer-events: none;
+}
+
+.boton-panico-container:hover .tooltip-panico {
+    opacity: 1;
+    right: 90px;
+}
+
+@keyframes latido {
+    0%, 100% {
+        transform: scale(1);
+    }
+    50% {
+        transform: scale(1.1);
+    }
+}
+
+/* ===== ANIMACIONES ===== */
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.animate-fadeInUp {
+    animation: fadeInUp 0.5s ease forwards;
+}
+
+/* ===== RESPONSIVE ===== */
+@media (max-width: 768px) {
+    .card-contador .numero {
+        font-size: 3rem;
+    }
+    
+    .btn-accion {
+        padding: 10px;
+    }
+    
+    .conexion-indicator .texto {
+        display: none;
+    }
+    
+    .reloj-digital {
+        font-size: 0.9rem;
+    }
+    
+    .boton-panico {
+        width: 50px;
+        height: 50px;
+        font-size: 1.5rem;
+    }
+}
+
+/* ===== SCROLLBAR ===== */
+::-webkit-scrollbar {
+    width: 8px;
+}
+
+::-webkit-scrollbar-track {
+    background: #f1f1f1;
+}
+
+::-webkit-scrollbar-thumb {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border-radius: 10px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: linear-gradient(135deg, #764ba2 0%, #667eea 100%);
+}

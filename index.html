@@ -1,0 +1,898 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mi Chofer  - Sistema Inteligente de Transporte</title>
+    
+    <!-- Bootstrap 5 -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Estilos personalizados -->
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            overflow-x: hidden;
+        }
+
+        /* Preloader */
+        #preloader {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            z-index: 9999;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            transition: opacity 0.5s ease, visibility 0.5s ease;
+        }
+
+        #preloader.hidden {
+            opacity: 0;
+            visibility: hidden;
+        }
+
+        .loader {
+            text-align: center;
+            color: white;
+        }
+
+        .loader i {
+            font-size: 4rem;
+            margin-bottom: 1rem;
+            animation: bounce 2s infinite;
+        }
+
+        .spinner {
+            width: 50px;
+            height: 50px;
+            border: 5px solid rgba(255,255,255,0.3);
+            border-top: 5px solid #ff9e00;
+            border-radius: 50%;
+            margin: 20px auto;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        @keyframes bounce {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-20px); }
+        }
+
+        /* Navbar */
+        .navbar {
+            background: rgba(0, 0, 0, 0.8);
+            backdrop-filter: blur(10px);
+            transition: all 0.3s ease;
+            padding: 1rem 0;
+        }
+
+        .navbar.scrolled {
+            padding: 0.5rem 0;
+            background: rgba(0, 0, 0, 0.95);
+        }
+
+        .navbar-brand {
+            font-size: 1.8rem;
+            font-weight: 800;
+        }
+
+        .navbar-brand span:first-child {
+            color: white;
+        }
+
+        .navbar-brand span:last-child {
+            color: #ff9e00;
+        }
+
+        .nav-link {
+            color: white !important;
+            font-weight: 500;
+            margin: 0 10px;
+            transition: all 0.3s ease;
+            position: relative;
+        }
+
+        .nav-link:hover {
+            color: #ff9e00 !important;
+        }
+
+        .nav-link::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 0;
+            height: 2px;
+            background: #ff9e00;
+            transition: width 0.3s ease;
+        }
+
+        .nav-link:hover::after {
+            width: 80%;
+        }
+
+        .btn-acceder {
+            background: #ff9e00;
+            color: #000;
+            font-weight: 600;
+            padding: 0.5rem 1.5rem;
+            border-radius: 50px;
+            transition: all 0.3s ease;
+        }
+
+        .btn-acceder:hover {
+            background: #ffb347;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(255, 158, 0, 0.3);
+        }
+
+        /* Hero Section */
+        .hero-section {
+            min-height: 100vh;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding-top: 90px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .hero-section::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" opacity="0.1"><path d="M10 50 Q 30 30, 50 50 T 90 50" stroke="white" fill="none" stroke-width="2"/></svg>');
+            background-size: 50px 50px;
+            animation: moveBackground 20s linear infinite;
+        }
+
+        @keyframes moveBackground {
+            from { background-position: 0 0; }
+            to { background-position: 100px 100px; }
+        }
+
+        .hero-content {
+            position: relative;
+            z-index: 2;
+        }
+
+        .hero-title {
+            font-size: 3.5rem;
+            font-weight: 800;
+            color: white;
+            margin-bottom: 1rem;
+            line-height: 1.2;
+        }
+
+        .hero-title .highlight {
+            color: #ff9e00;
+            display: inline-block;
+            animation: glow 2s infinite;
+        }
+
+        @keyframes glow {
+            0%, 100% { text-shadow: 0 0 10px rgba(255, 158, 0, 0.5); }
+            50% { text-shadow: 0 0 20px rgba(255, 158, 0, 0.8); }
+        }
+
+        .hero-subtitle {
+            font-size: 1.2rem;
+            color: rgba(255, 255, 255, 0.9);
+            margin-bottom: 2rem;
+        }
+
+        /* Stats Cards */
+        .stats-container {
+            display: flex;
+            gap: 20px;
+            margin-top: 3rem;
+        }
+
+        .stat-card {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 15px;
+            padding: 1.5rem;
+            text-align: center;
+            flex: 1;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-10px);
+            background: rgba(255, 255, 255, 0.2);
+            border-color: #ff9e00;
+        }
+
+        .stat-number {
+            font-size: 2.5rem;
+            font-weight: 800;
+            color: white;
+            margin-bottom: 0.5rem;
+        }
+
+        .stat-label {
+            color: rgba(255, 255, 255, 0.8);
+            font-size: 0.9rem;
+        }
+
+        /* Phone Mockup */
+        .phone-mockup {
+            position: relative;
+            width: 100%;
+            max-width: 350px;
+            margin: 0 auto;
+        }
+
+        .phone-frame {
+            background: #1a1a1a;
+            border-radius: 40px;
+            padding: 10px;
+            box-shadow: 0 30px 50px rgba(0, 0, 0, 0.3);
+            position: relative;
+            z-index: 2;
+        }
+
+        .phone-screen {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 30px;
+            padding: 20px;
+            min-height: 600px;
+            color: white;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .phone-notch {
+            position: absolute;
+            top: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 120px;
+            height: 25px;
+            background: #1a1a1a;
+            border-radius: 0 0 20px 20px;
+            z-index: 3;
+        }
+
+        .app-preview {
+            margin-top: 30px;
+        }
+
+        .preview-card {
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 15px;
+            padding: 15px;
+            margin-bottom: 10px;
+            animation: slideIn 0.5s ease;
+            transform-origin: left;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateX(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        /* Features Section */
+        .features-section {
+            padding: 80px 0;
+            background: #f8f9fa;
+        }
+
+        .section-title {
+            text-align: center;
+            margin-bottom: 60px;
+        }
+
+        .section-title h2 {
+            font-size: 2.5rem;
+            font-weight: 800;
+            color: #333;
+            margin-bottom: 1rem;
+        }
+
+        .section-title p {
+            color: #666;
+            font-size: 1.1rem;
+        }
+
+        .feature-card {
+            background: white;
+            border-radius: 20px;
+            padding: 30px;
+            text-align: center;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            transition: all 0.3s ease;
+            height: 100%;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .feature-card:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
+        }
+
+        .feature-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 5px;
+            background: linear-gradient(90deg, #ff9e00, #ff4d4d);
+        }
+
+        .feature-icon {
+            width: 80px;
+            height: 80px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 20px;
+            color: white;
+            font-size: 2rem;
+        }
+
+        .feature-card h3 {
+            font-size: 1.5rem;
+            font-weight: 700;
+            margin-bottom: 1rem;
+            color: #333;
+        }
+
+        .feature-card p {
+            color: #666;
+            margin-bottom: 1.5rem;
+        }
+
+        .feature-btn {
+            background: transparent;
+            border: 2px solid #667eea;
+            color: #667eea;
+            padding: 0.5rem 1.5rem;
+            border-radius: 50px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-block;
+        }
+
+        .feature-btn:hover {
+            background: #667eea;
+            color: white;
+        }
+
+        /* CTA Section */
+        .cta-section {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 60px 0;
+            text-align: center;
+            color: white;
+        }
+
+        .cta-section h2 {
+            font-size: 2.5rem;
+            font-weight: 800;
+            margin-bottom: 1rem;
+        }
+
+        .cta-section p {
+            font-size: 1.2rem;
+            margin-bottom: 2rem;
+            opacity: 0.9;
+        }
+
+        .cta-btn {
+            background: #ff9e00;
+            color: #000;
+            font-weight: 700;
+            padding: 1rem 3rem;
+            border-radius: 50px;
+            font-size: 1.2rem;
+            text-decoration: none;
+            display: inline-block;
+            transition: all 0.3s ease;
+            border: none;
+            cursor: pointer;
+        }
+
+        .cta-btn:hover {
+            background: #ffb347;
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+            color: #000;
+        }
+
+        /* Footer */
+        footer {
+            background: #1a1a1a;
+            color: white;
+            padding: 40px 0;
+        }
+
+        .footer-title {
+            font-size: 1.5rem;
+            font-weight: 700;
+            margin-bottom: 1rem;
+        }
+
+        .footer-title span {
+            color: #ff9e00;
+        }
+
+        .footer-links {
+            list-style: none;
+            padding: 0;
+        }
+
+        .footer-links li {
+            margin-bottom: 0.5rem;
+        }
+
+        .footer-links a {
+            color: rgba(255, 255, 255, 0.7);
+            text-decoration: none;
+            transition: all 0.3s ease;
+        }
+
+        .footer-links a:hover {
+            color: #ff9e00;
+            padding-left: 5px;
+        }
+
+        .social-links {
+            display: flex;
+            gap: 15px;
+            margin-top: 1rem;
+        }
+
+        .social-links a {
+            width: 40px;
+            height: 40px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            text-decoration: none;
+            transition: all 0.3s ease;
+        }
+
+        .social-links a:hover {
+            background: #ff9e00;
+            transform: translateY(-3px);
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .hero-title {
+                font-size: 2.5rem;
+            }
+            
+            .stats-container {
+                flex-direction: column;
+            }
+            
+            .phone-mockup {
+                margin-top: 3rem;
+            }
+            
+            .section-title h2 {
+                font-size: 2rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Preloader -->
+    <div id="preloader">
+        <div class="loader">
+            <i class="fas fa-bus"></i>
+            <h2>Mi Chofer</h2>
+            <div class="spinner"></div>
+            <p class="mt-3">Cargando experiencia paceña...</p>
+        </div>
+    </div>
+
+    <!-- Navbar -->
+    <nav class="navbar navbar-expand-lg navbar-dark fixed-top" id="mainNavbar">
+        <div class="container">
+            <a class="navbar-brand" href="#">
+                <span>Mi</span><span>Chofer</span>
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="#inicio">Inicio</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#como-funciona">Cómo funciona</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#beneficios">Beneficios</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#contacto">Contacto</a>
+                    </li>
+                    <li class="nav-item dropdown">
+                        <a class="nav-link btn-acceder" href="#" role="button" data-bs-toggle="dropdown">
+                            <i class="fas fa-user me-2"></i>Acceder
+                        </a>
+                        <ul class="dropdown-menu dropdown-menu-end">
+                            <li><a class="dropdown-item" href="panels/chofer/index.html"><i class="fas fa-user-tie me-2"></i>Soy Chofer</a></li>
+                            <li><a class="dropdown-item" href="panels/pasajero/login.html"><i class="fas fa-user me-2"></i>Soy Pasajero</a></li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li><a class="dropdown-item" href="panels/presidente/index.html"><i class="fas fa-user-cog me-2"></i>Presidente Sindicato</a></li>
+                        </ul>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <section id="inicio" class="hero-section">
+        <div class="container h-100">
+            <div class="row h-100 align-items-center">
+                <div class="col-lg-6 hero-content">
+                    <h1 class="hero-title">
+                        Transporte inteligente<br>en <span class="highlight"></span>
+                    </h1>
+                    <p class="hero-subtitle">
+                        Controla tu viaje en tiempo real, paga con QR y llega seguro a tu destino. 
+                        El primer sistema integral para minibuses paceños.
+                    </p>
+                    <div class="d-flex gap-3">
+                        <a href="panels/pasajero/dashboard.html" class="btn cta-btn">
+                            <i class="fas fa-search me-2"></i>Buscar minibus
+                        </a>
+                        <a href="#como-funciona" class="btn btn-outline-light btn-lg">
+                            <i class="fas fa-play me-2"></i>Cómo funciona
+                        </a>
+                    </div>
+                    
+                    <!-- Stats -->
+                    <div class="stats-container">
+                        <div class="stat-card">
+                            <div class="stat-number">30</div>
+                            <div class="stat-label">Minibuses</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-number">1</div>
+                            <div class="stat-label">Sindicato</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-number">98</div>
+                            <div class="stat-label">Pasajeros</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="col-lg-6">
+                    <div class="phone-mockup">
+                        <div class="phone-frame">
+                            <div class="phone-screen">
+                                <div class="phone-notch"></div>
+                                <div class="app-preview">
+                                    <div class="preview-card" style="animation-delay: 0.1s">
+                                        <div class="d-flex align-items-center">
+                                            <i class="fas fa-bus fa-2x me-3"></i>
+                                            <div>
+                                                <h6 class="mb-1">Ruta 288</h6>
+                                                <small>Villa Salomé - Centro</small>
+                                            </div>
+                                            <span class="badge bg-warning ms-auto">5 min</span>
+                                        </div>
+                                    </div>
+                                    <div class="preview-card" style="animation-delay: 0.2s">
+                                        <div class="d-flex align-items-center">
+                                            <i class="fas fa-bus fa-2x me-3"></i>
+                                            <div>
+                                                <h6 class="mb-1">Ruta 42</h6>
+                                                <small>Sopocachi - Caja Ferroviaria</small>
+                                            </div>
+                                            <span class="badge bg-success ms-auto">2 min</span>
+                                        </div>
+                                    </div>
+                                    <div class="preview-card" style="animation-delay: 0.3s">
+                                        <div class="d-flex align-items-center">
+                                            <i class="fas fa-bus fa-2x me-3"></i>
+                                            <div>
+                                                <h6 class="mb-1">Ruta 15</h6>
+                                                <small>San Pedro - Obrajes</small>
+                                            </div>
+                                            <span class="badge bg-danger ms-auto">LLENO</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div class="text-center mt-4">
+                                    <div class="d-flex justify-content-center gap-2">
+                                        <i class="fas fa-wifi"></i>
+                                        <i class="fas fa-battery-three-quarters"></i>
+                                        <i class="fas fa-clock"></i>
+                                    </div>
+                                    <p class="mt-2 small">9:41</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Cómo funciona Section -->
+    <section id="como-funciona" class="features-section">
+        <div class="container">
+            <div class="section-title">
+                <h2>¿Cómo funciona <span style="color: #ff9e00;">Mi Chofer </span>?</h2>
+                <p>Tres paneles diseñados para cada necesidad</p>
+            </div>
+            
+            <div class="row g-4">
+                <div class="col-md-4">
+                    <div class="feature-card">
+                        <div class="feature-icon">
+                            <i class="fas fa-user-tie"></i>
+                        </div>
+                        <h3>Panel del Chofer</h3>
+                        <p>Controla pasajeros, efectivo y rutas en tiempo real. Interfaz simple con botones grandes para usar mientras conduces.</p>
+                        <a href="panels/chofer/index.html" class="feature-btn">Ver panel</a>
+                    </div>
+                </div>
+                
+                <div class="col-md-4">
+                    <div class="feature-card">
+                        <div class="feature-icon">
+                            <i class="fas fa-users"></i>
+                        </div>
+                        <h3>App del Pasajero</h3>
+                        <p>Encuentra el minibus más cercano, paga con QR y recibe alertas de capacidad. Diseñado para ahorrar datos.</p>
+                        <a href="panels/pasajero/login.html" class="feature-btn">Ver app</a>
+                    </div>
+                </div>
+                
+                <div class="col-md-4">
+                    <div class="feature-card">
+                        <div class="feature-icon">
+                            <i class="fas fa-building"></i>
+                        </div>
+                        <h3>Panel del Sindicato</h3>
+                        <p>Gestiona toda la flota, genera reportes y monitorea ingresos en tiempo real desde un dashboard ejecutivo.</p>
+                        <a href="panels/presidente/index.html" class="feature-btn">Ver panel</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Beneficios Section -->
+    <section id="beneficios" class="py-5 bg-white">
+        <div class="container">
+            <div class="section-title">
+                <h2>Beneficios para <span style="color: #ff9e00;">todos</span></h2>
+                <p>Una solución que beneficia a toda la comunidad paceña</p>
+            </div>
+            
+            <div class="row mt-5">
+                <div class="col-md-6 mb-4">
+                    <div class="d-flex gap-3">
+                        <i class="fas fa-check-circle fa-3x" style="color: #4cc9f0;"></i>
+                        <div>
+                            <h4>Para Choferes</h4>
+                            <p class="text-muted">Aumenta tus ingresos con control preciso de pasajeros, reduce fugas de efectivo y optimiza tus rutas.</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="col-md-6 mb-4">
+                    <div class="d-flex gap-3">
+                        <i class="fas fa-shield-alt fa-3x" style="color: #4cc9f0;"></i>
+                        <div>
+                            <h4>Para Pasajeros</h4>
+                            <p class="text-muted">Viaja seguro sabiendo dónde está tu minibus, paga sin efectivo y recibe alertas de capacidad.</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="col-md-6 mb-4">
+                    <div class="d-flex gap-3">
+                        <i class="fas fa-chart-line fa-3x" style="color: #4cc9f0;"></i>
+                        <div>
+                            <h4>Para el Sindicato</h4>
+                            <p class="text-muted">Control total de la flota, estadísticas en tiempo real y reportes automáticos de ingresos.</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="col-md-6 mb-4">
+                    <div class="d-flex gap-3">
+                        <i class="fas fa-city fa-3x" style="color: #4cc9f0;"></i>
+                        <div>
+                            <h4>Para La Paz</h4>
+                            <p class="text-muted">Modernizamos el transporte paceño, reducimos el uso de efectivo y mejoramos la seguridad vial.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- CTA Section -->
+    <section class="cta-section">
+        <div class="container">
+            <h2>¿Listo para modernizar tu viaje?</h2>
+            <p>Únete a la revolución del transporte paceño</p>
+            <a href="panels/pasajero/registro.html" class="cta-btn">
+                <i class="fas fa-user-plus me-2"></i>Regístrate gratis
+            </a>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer id="contacto">
+        <div class="container">
+            <div class="row">
+                <div class="col-md-4 mb-4">
+                    <h3 class="footer-title">Mi Chofer<span></span></h3>
+                    <p class="text-white-50">Transformando el transporte paceño con tecnología innovadora.</p>
+                    <div class="social-links">
+                        <a href="#"><i class="fab fa-facebook-f"></i></a>
+                        <a href="#"><i class="fab fa-twitter"></i></a>
+                        <a href="#"><i class="fab fa-instagram"></i></a>
+                        <a href="#"><i class="fab fa-whatsapp"></i></a>
+                    </div>
+                </div>
+                
+                <div class="col-md-2 mb-4">
+                    <h5>Enlaces</h5>
+                    <ul class="footer-links">
+                        <li><a href="#inicio">Inicio</a></li>
+                        <li><a href="#como-funciona">Cómo funciona</a></li>
+                        <li><a href="#beneficios">Beneficios</a></li>
+                        <li><a href="#contacto">Contacto</a></li>
+                    </ul>
+                </div>
+                
+                <div class="col-md-3 mb-4">
+                    <h5>Paneles</h5>
+                    <ul class="footer-links">
+                        <li><a href="panels/chofer/index.html">PanMi Chofer</a></li>
+                        <li><a href="panels/pasajero/login.html">App Pasajero</a></li>
+                        <li><a href="panels/presidente/index.html">Panel Presidente</a></li>
+                    </ul>
+                </div>
+                
+                <div class="col-md-3 mb-4">
+                    <h5>Contacto</h5>
+                    <ul class="footer-links">
+                        <li><i class="fas fa-phone me-2"></i>75835585</li>
+                        <li><i class="fas fa-envelope me-2"></i>info@michofer.bo</li>
+                        <li><i class="fas fa-map-marker-alt me-2"></i>La Paz, Bolivia</li>
+                    </ul>
+                </div>
+            </div>
+            
+            <hr class="bg-white opacity-25">
+            
+            <div class="text-center">
+                <p class="text-white-50 mb-0">&copy; 2026 Mi Chofer . Todos los derechos reservados.</p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <script>
+        // Ocultar preloader cuando la página cargue
+        window.addEventListener('load', function() {
+            setTimeout(function() {
+                document.getElementById('preloader').classList.add('hidden');
+            }, 1500); // Mostrar el preloader por 1.5 segundos
+        });
+
+        // Navbar scroll effect
+        window.addEventListener('scroll', function() {
+            const navbar = document.getElementById('mainNavbar');
+            if(window.scrollY > 50) {
+                navbar.classList.add('scrolled');
+            } else {
+                navbar.classList.remove('scrolled');
+            }
+        });
+
+        // Smooth scroll para enlaces internos
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                const target = document.querySelector(this.getAttribute('href'));
+                if(target) {
+                    target.scrollIntoView({
+                        behavior: 'smooth',
+                        block: 'start'
+                    });
+                }
+            });
+        });
+
+        // Animación de números en stats
+        function animateNumbers() {
+            const stats = document.querySelectorAll('.stat-number');
+            
+            stats.forEach(stat => {
+                const target = stat.innerText.replace(/[^0-9]/g, '');
+                if(target) {
+                    let current = 0;
+                    const increment = Math.ceil(target / 50);
+                    const timer = setInterval(() => {
+                        current += increment;
+                        if(current >= target) {
+                            stat.innerText = target + (stat.innerText.includes('+') ? '+' : '');
+                            clearInterval(timer);
+                        } else {
+                            stat.innerText = current + (stat.innerText.includes('+') ? '+' : '');
+                        }
+                    }, 20);
+                }
+            });
+        }
+
+        // Ejecutar animación cuando el elemento sea visible
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if(entry.isIntersecting) {
+                    animateNumbers();
+                    observer.unobserve(entry.target);
+                }
+            });
+        });
+
+        observer.observe(document.querySelector('.stats-container'));
+
+        // Efecto hover en feature cards
+        document.querySelectorAll('.feature-card').forEach(card => {
+            card.addEventListener('mouseenter', function() {
+                this.style.transform = 'translateY(-10px)';
+            });
+            
+            card.addEventListener('mouseleave', function() {
+                this.style.transform = 'translateY(0)';
+            });
+        });
+    </script>
+</body>
+</html>
